@@ -2,7 +2,7 @@
 操作系统课程设计
 
 ## 主体结构图
-！[image](https://github.com/B266/FileSystem/blob/master/Design.png)
+![image](https://github.com/B266/FileSystem/blob/master/Design.png)
 ---
 ## 分工设计
 ### 核心结构
