@@ -7,11 +7,11 @@ const int FILE_NAME_LEN = 8;
 const int FILE_EXT_LEN = 8;
 
 const int BlockSize = 512;
-const int InodeBlockSum = 62;
+const int InodeBlockSum = 256;
 
-const int DataBlockSum = 512;
+const int DataBlockSum = 1024;
 const int DiskBlockSum = 1 + 1+ InodeBlockSum + DataBlockSum;
-const int InodeSize = 32;
+const int InodeSize = 128;
 const int DataBlockStart = InodeBlockSum+2;
 
 const int InodeSumInOneBlock = BlockSize / InodeSize;
@@ -31,7 +31,7 @@ const int NameLen = 18;
 
 
 
-struct inode {  //32byte
+struct inode {  //128byte
 	int inodeId = 0;
 	char Name[NameLen] = { 0 };
 	char i_uname[20];						//文件所属用户
@@ -39,9 +39,7 @@ struct inode {  //32byte
 	int permissions = 0;
 	int firstDataBlockIndex = 0;
 	int i_size;
-	time_t  i_ctime;						//inode上一次变动的时间
-	time_t  i_mtime;						//文件内容上一次变动的时间
-	time_t  i_atime;						//文件上一次打开的时间
+
 	int i_dirBlock[10];						//10个直接块。10*512B = 5120B = 5KB
 	int i_indirBlock_1;						//一级间接块。512B/4 * 512B = 128 * 512B = 64KB
 	int i_indirBlock_2;			//二级间接块。(512B/4)*(512B/4) * 512B = 128*128*512B = 8192KB = 8MB
@@ -88,6 +86,16 @@ bool InodeBitmap[InodeSum] = { 0 }; //0表示inode节点没被用 1表示inode节点被用 最
 
 Disk disk;
 
+
+inode *NowPath = &Inode[SuperBlock.firstInode];
+
+void initInode()
+{
+	for (int i = 0; i < InodeSum; i++)
+	{
+		Inode[i].inodeId = i;
+	}
+}
 
 int GetAInode()
 {
@@ -383,13 +391,13 @@ void InitRootFolder()
 
 }
 
-void AddItemInFolder(inode folderInode, char* name, int inodeIndex)
+void AddItemInFolder(inode *folderInode, char* name, int inodeIndex)
 {
-	Folder *folder = loadFolderFromDisk(disk, folderInode.firstDataBlockIndex);
+	Folder *folder = loadFolderFromDisk(disk, folderInode->firstDataBlockIndex);
 	strcpy_s(folder->name[folder->itemSum], name);
 	folder->index[folder->itemSum] = inodeIndex;
 	folder->itemSum++;
-	SaveFolderToBlock(disk, folderInode.firstDataBlockIndex, *folder);
+	SaveFolderToBlock(disk, folderInode->firstDataBlockIndex, *folder);
 }
 
 
@@ -421,7 +429,7 @@ TextBlock* LoadTextBlockFromDisk(Disk& disk, int index)
 	return textBlock;
 }
 
-void NewTxt(inode FolderInode)
+void NewTxt(inode *FolderInode)
 {
 	int indexInode = GetAInode();
 	int indexBlock = GetOneBlock(disk);
@@ -454,31 +462,65 @@ void NewTxt(inode FolderInode)
 }
 
 
-void ShowText(inode fileinode)
+void ShowText(inode *fileinode)
 {
-	cout << "filename:" << fileinode.Name << endl;
-	TextBlock* textBlock = LoadTextBlockFromDisk(disk, fileinode.firstDataBlockIndex);
+	cout << "filename:" << fileinode->Name << endl;
+	TextBlock* textBlock = LoadTextBlockFromDisk(disk, fileinode->firstDataBlockIndex);
 	cout << textBlock->data << endl;
 }
 
-void NewFolder()
+void NewFolder(Disk& disk,inode *FatherFolderInode,char *folderName)
 {
+
+	Folder folderBlock;
+
+
+
+	sprintf_s(folderBlock.name[0], "..");
+	sprintf_s(folderBlock.name[1], ".");
+	folderBlock.itemSum = 2;
+	int inodeId = GetAInode();
+
+	folderBlock.index[0] = FatherFolderInode->inodeId;
+	folderBlock.index[1] = inodeId;
+
+	int blockId = GetOneBlock(disk);
+	strcpy_s(Inode[inodeId].Name, folderName);
+	Inode[inodeId].firstDataBlockIndex = blockId;
+	SaveFolderToBlock(disk, blockId, folderBlock);
+
+	//修改上级目录
+	AddItemInFolder(FatherFolderInode, folderName, inodeId);
 
 }
 
-void CD(inode Inode)
+void LS(inode *Inode)
 {
-	Folder* folder = loadFolderFromDisk(disk, Inode.firstDataBlockIndex);
+	Folder* folder = loadFolderFromDisk(disk, Inode->firstDataBlockIndex);
 	for (int i = 0; i < folder->itemSum; i++)
 	{
 		cout << folder->index[i] << "\t";
 		cout << folder->name[i] << endl;
 	}
-	
+}
+
+void CD(char *name,inode **nowpath)
+{
+	Folder* folder = loadFolderFromDisk(disk, (*nowpath)->firstDataBlockIndex);
+	for (int i = 0; i < folder->itemSum; i++)
+	{
+		if (strcmp(name, folder->name[i])==0)
+		{
+			*nowpath = &Inode[ folder->index[i]];
+
+		}
+	}
+
 }
 
 int main()
 {
+	initInode();
 	initGroupLink(disk);
 	InitRootFolder();
 
@@ -487,72 +529,50 @@ int main()
 	//cout << sizeof(int) << endl;
 	//cout << sizeof(char)* NameLen << endl;
 	cout << sizeof(inode) << endl;
-
+	LS(NowPath);
 	while (1)
 	{
-		char a;
-		cin >> a;
-		
-		if (a == 'r')
-		{
-			cout << GetOneBlock(disk) << endl;
-		}
-		if (a == 's')
-		{
-			showAll();
-		}
-		if (a == 'f')
-		{
-			int index;
-			cin >> index;
-			FreeABlock(disk, index);
-		}
-
-		if (a == 'z')
-		{
-			cout << GetAInode() << endl;
-		}
-		if (a == 'x')
-		{
-			int index;
-			cin >> index;
-			FreeAInode(index);
-		}
-		if (a == 'c')
-		{
-			SaveDisk();
-		}
-		if (a == 'v')
-		{
-			LoadDisk();
-		}
-		if (a == 'l')
+		char command[20] = { 0 };
+		cin >> command;
+		if (strcmp(command, "cd") == 0)
 		{
 			char name[20];
 			cin >> name;
-			strcpy_s(SuperBlock.name, name);
+			CD(name,&NowPath);
+			LS(NowPath);
 		}
-		if (a == 'k')
+		if (strcmp(command, "ls") == 0)
 		{
-			cout << SuperBlock.name << endl;
+			LS(NowPath);
 		}
-		if (a == '0')
+		if (strcmp(command, "new") == 0)
 		{
-			CD(Inode[SuperBlock.firstInode]);
+			NewTxt(NowPath);
 		}
-		if (a == '1')
+		if (strcmp(command, "open") == 0)
 		{
-			NewTxt(Inode[SuperBlock.firstInode]);
-		}
-		if (a == '2')
-		{
-			cout << "input inode id:";
 			int index;
 			cin >> index;
-			ShowText(Inode[index]);
+			ShowText(&Inode[index]);
 		}
+		if (strcmp(command, "save") == 0)
+		{
+			SaveDisk();
+		}
+		if (strcmp(command, "load") == 0)
+		{
+			LoadDisk();
+		}
+		if (strcmp(command, "mkdir") == 0)
+		{
 
+			char name[20];
+			cin >> name;
+			NewFolder(disk, NowPath, name);
+			LS(NowPath);
+		}
 	}
+
 	
 
 
