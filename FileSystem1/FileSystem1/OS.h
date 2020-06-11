@@ -25,7 +25,7 @@ const int MaxFreeBlockCount = 100;
 
 struct block
 {
-	bool bit[512 * 8] = { 0 };//每一块占512字节
+	char byte[512] = { 0 };//每一块占512字节
 };
 
 
@@ -34,19 +34,19 @@ const int NameLen = 18;
 
 
 
-struct inode {  //128byte，存放文件信息
+struct inode {  //128byte
 	int inodeId = 0;
 	char Name[NameLen] = { 0 };
-	char i_uname[20];						//文件所属用户
-	char i_gname[20];						//文件所属用户组
+	char username[20];						//文件所属用户
+	char usergroupname[20];						//文件所属用户组
 	int permissions = 0;
-	int firstDataBlockIndex = 0;
-	int i_size;
 
-	int i_dirBlock[10];						//10个直接块。10*512B = 5120B = 5KB
-	int i_indirBlock_1;						//一级间接块。512B/4 * 512B = 128 * 512B = 64KB
-	int i_indirBlock_2;			//二级间接块。(512B/4)*(512B/4) * 512B = 128*128*512B = 8192KB = 8MB
-	int i_indirBlock_3;			//三级间接块。(512B/4)*(512B/4)*(512B/4) * 512B = 128*128*128*512B = 1048576KB = 1024MB = 1G
+	int size;
+
+	int DataBlockIndex0[10] = { 0 };						//10个直接块。10*512B = 5120B = 5KB
+	int DataBlockIndex1;						//一级间接块。512B/4 * 512B = 128 * 512B = 64KB
+	int DataBlockIndex2;			//二级间接块。(512B/4)*(512B/4) * 512B = 128*128*512B = 8192KB = 8MB
+	int DataBlockIndex3;			//三级间接块。(512B/4)*(512B/4)*(512B/4) * 512B = 128*128*128*512B = 1048576KB = 1024MB = 1G
 											//文件系统太小，暂且省略二级、三级间接块
 };
 
@@ -79,6 +79,32 @@ struct superblock {//超级块
 	FreeBlock SuperEmptyBlockList;//空闲块列表
 
 };
+
+
+
+struct File {
+	inode fileInode;
+	int dataSize;
+	char* data;
+};
+//======================================================
+// text block
+struct TextBlock
+{
+	int inodeindex;
+	char data[sizeof(block) - sizeof(int)];
+};
+
+//=============================================
+struct Folder
+{
+	int itemSum = 0;
+	int index[20];
+	char name[20][20];
+};
+
+
+
 //---------------共享变量----------------------------------------------------------------------------------
 extern superblock SuperBlock;
 extern inode Inode[InodeSum];
@@ -113,25 +139,12 @@ void LoadDisk();
 bool Format();
 
 
-struct Folder
-{
-	int itemSum = 0;
-	int index[20];
-	char name[20][20];
-};
 
 void SaveFolderToBlock(Disk& disk, int index, Folder folder);
 Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
 void AddItemInFolder(inode folderInode, char* name, int inodeIndex);
 
-//======================================================
-// text block
-struct TextBlock
-{
-	int next;
-	char data[BlockSize - sizeof(int)];
-};
 
 void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock);
 TextBlock* LoadTextBlockFromDisk(Disk& disk, int index);
