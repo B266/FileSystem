@@ -3,18 +3,19 @@
 
 int main()
 {
-	cout << sizeof(DataBlockIndexFile) << endl;
+	cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
 	initInode();
 	initGroupLink(disk);
 	InitRootFolder();
 
 	//showAll();
-	cout << sizeof(int) << endl;
+	cout << "int: "  << sizeof(int) << endl;
 	//cout << sizeof(Folder) << endl;
 	//cout << sizeof(int) << endl;
 	//cout << sizeof(char)* NameLen << endl;
-	cout << sizeof(block) << endl;
-	cout << sizeof(inode) << endl;
+	cout << "block: " << sizeof(block) << endl;
+	cout << "inode: " << sizeof(inode) << endl;
+
 	LS(NowPath);
 	while (1)
 	{

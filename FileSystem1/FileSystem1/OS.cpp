@@ -537,17 +537,28 @@ void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int inde
 // 删除文件操作
 void RM(Disk& disk, inode* folderInode, char* name) {
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
+	// 计算当前的block数量
+	int blockNum = folderInode->size / (sizeof(block) - sizeof(int)) + 1;
+	// 遍历当前目录
 	for (int i = 0; i < folder->itemSum; i++)
 	{
 		// 若找到了要删除的文件
 		if (strcmp(folder->name[i], name) == 0) {
 			int inodeID = folder->index[i];
-			int blockID = Inode[inodeID].DataBlockIndex0[0];
 			// 释放当前文件的inode，位图1变0
 			if (FreeAInode(inodeID)) {
 				// 释放当前文件的block区的内容
-				memset(&disk.data[blockID], 0, sizeof(block));
-				FreeABlock(disk, blockID);
+				// 若blockNum数量<=10，则说明是在10个直接块中存储的数据
+				if (blockNum <= 10) {
+					for (int j = 0; j < blockNum; j++) {
+						int blockID = Inode[inodeID].DataBlockIndex0[i];
+						memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+				}
+				else {
+
+				}
 				DeleteItemInFolder(folderInode, folder, name, i);
 			}
 		}
