@@ -7,3 +7,11 @@
 /FileSystem1/FileSystem1/x64/Debug/FileSystem1.tlog
 /FileSystem1/FileSystem1/x64/Debug
 /FileSystem1/x64/Debug
+*.dat
+.vs/FileSystem/v16/.suo
+.vs/FileSystem/v16/Browse.VC.db
+.vs/FileSystem/v16/ipch/AutoPCH/954d2bbcf7f50678/OS.ipch
+.vs/FileSystem/v16/ipch/AutoPCH/9ca5af41df54a02b/MAIN.ipch
+.vs/ProjectSettings.json
+.vs/slnx.sqlite
+.vs/VSWorkspaceState.json
