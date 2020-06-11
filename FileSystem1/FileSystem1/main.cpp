@@ -3,13 +3,13 @@
 
 int main()
 {
-	cout << sizeof(TextBlock) << endl;
+	cout << sizeof(DataBlockIndexFile) << endl;
 	initInode();
 	initGroupLink(disk);
 	InitRootFolder();
 
 	//showAll();
-	cout << sizeof(bool) << endl;
+	cout << sizeof(int) << endl;
 	//cout << sizeof(Folder) << endl;
 	//cout << sizeof(int) << endl;
 	//cout << sizeof(char)* NameLen << endl;

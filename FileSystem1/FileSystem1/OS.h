@@ -133,9 +133,11 @@ void showAll();
 int GetOneBlock(Disk& disk);
 void FreeABlock(Disk& disk, int index);
 void ShowAllBlock(Disk& disk);
+void SaveDataBlockIndexFileToDisk(DataBlockIndexFile& dataBlockIndexFile, Disk& disk, int index);
+DataBlockIndexFile LoadDataBlockIndexFileFromDisk(Disk& disk, int index);
 void SaveSuperBlockToDisk(superblock& SuperBlock, Disk& disk);
 void SaveInodeToDisk(bool& bitmap, inode& inodeList, Disk& disk);
-void LoadSuperBlockToDisk(superblock& SuperBlock, Disk& disk);
+void LoadSuperBlockFromDisk(superblock& SuperBlock, Disk& disk);
 void LoadInodeFromDisk(bool& bitmap, inode& inodeList, Disk& disk);
 void SaveDisk();
 void LoadDisk();
@@ -147,7 +149,8 @@ bool Format();
 void SaveFolderToBlock(Disk& disk, int index, Folder folder);
 Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
-void AddItemInFolder(inode folderInode, char* name, int inodeIndex);
+
+void AddItemInFolder(inode* folderInode, char* name, int inodeIndex);
 
 
 void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock);

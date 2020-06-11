@@ -206,6 +206,18 @@ void ShowAllBlock(Disk& disk)
 
 }
 
+void SaveDataBlockIndexFileToDisk(DataBlockIndexFile& dataBlockIndexFile, Disk& disk, int index)
+{
+	memcpy(&disk.data[index], &dataBlockIndexFile, sizeof(DataBlockIndexFile));
+}
+
+DataBlockIndexFile LoadDataBlockIndexFileFromDisk(Disk& disk, int index)
+{
+	DataBlockIndexFile dataBlockIndexFile;
+	memcpy(&dataBlockIndexFile, &disk.data[index], sizeof(block));
+	return dataBlockIndexFile;
+}
+
 
 void SaveSuperBlockToDisk(superblock& SuperBlock, Disk& disk)
 {
@@ -218,7 +230,7 @@ void SaveInodeToDisk(bool& bitmap, inode& inodeList, Disk& disk)
 
 }
 
-void LoadSuperBlockToDisk(superblock& SuperBlock, Disk& disk)
+void LoadSuperBlockFromDisk(superblock& SuperBlock, Disk& disk)
 {
 	memcpy(&SuperBlock, &disk.data[0], sizeof(superblock));
 
@@ -255,7 +267,7 @@ void LoadDisk()
 	memcpy(&disk, buffer, sizeof(Disk));
 	free(buffer);
 
-	LoadSuperBlockToDisk(SuperBlock, disk);
+	LoadSuperBlockFromDisk(SuperBlock, disk);
 	LoadInodeFromDisk(*InodeBitmap, *Inode, disk);
 }
 
@@ -342,6 +354,14 @@ int max(int a, int b)
 	}
 	return b;
 }
+int min(int a, int b)
+{
+	if (a < b)
+	{
+		return a;
+	}
+	return b;
+}
 
 void NewTxt(inode* FolderInode)
 {
@@ -363,7 +383,7 @@ void NewTxt(inode* FolderInode)
 	const int maxsize = 99999;
 
 	//写入自己的datablock
-	char text[99999] = { 0 };
+	char text[maxsize] = { 0 };
 
 	cout << "data:";
 
@@ -388,7 +408,7 @@ void NewTxt(inode* FolderInode)
 
 
 
-	for (int i = 0; i <max(blockSize,10); i++)
+	for (int i = 0; i <min(blockSize,10); i++)
 	{
 		indexBlock = GetOneBlock(disk);
 		TextBlock textBlock;
@@ -398,9 +418,24 @@ void NewTxt(inode* FolderInode)
 		SaveTextBlockToDisk(disk, indexBlock, textBlock);
 
 	}
+
+	DataBlockIndexFile dataBlockIndexFile;
+	
 	if (blockSize > 10)
 	{
+		for (int i = 10; i < min(blockSize,128+10); i++)
+		{
+			indexBlock = GetOneBlock(disk);
+			TextBlock textBlock;
+			memcpy(textBlock.data, &text[i * dataOneBlock], dataOneBlock);
+			textBlock.inodeindex = indexInode;
+			dataBlockIndexFile.index[i-10] = indexBlock;
+			SaveTextBlockToDisk(disk, indexBlock, textBlock);
+		}
+		int dataBlockIndex1FileIndex = GetOneBlock(disk);
+		SaveDataBlockIndexFileToDisk(dataBlockIndexFile, disk, dataBlockIndex1FileIndex);
 
+		Inode[indexInode].DataBlockIndex1 = dataBlockIndex1FileIndex;
 	}
 
 
@@ -417,10 +452,19 @@ void ShowText(inode* fileinode)
 	int CharInOneBlockSum = sizeof(block) - sizeof(int);
 	int fileDataBlockSum = fileinode->size / CharInOneBlockSum + 1;
 
-	for (int i = 0; i < fileDataBlockSum; i++)
+	for (int i = 0; i < min(fileDataBlockSum,10); i++)
 	{
 		TextBlock* textBlock = LoadTextBlockFromDisk(disk, fileinode->DataBlockIndex0[i]);
 		cout << textBlock->data << endl;
+	}
+	if (fileDataBlockSum > 10)
+	{
+		DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, fileinode->DataBlockIndex1);
+		for (int i = 10; i < min(fileDataBlockSum, 128 + 10); i++)
+		{
+			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile.index[i-10]);
+			cout << textBlock->data << endl;
+		}
 	}
 
 }
