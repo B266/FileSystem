@@ -473,3 +473,39 @@ void CD(char* name, inode** nowpath)
 	}
 
 }
+
+// 更改目录结构，删除一个文件
+void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int index) {
+	// 将当前文件夹要删除的文件后边的所有文件的位置-1
+	for (int i = index; i < folder->itemSum - 1; i++) {
+		strcpy_s(folder->name[i], folder->name[i + 1]);
+		folder->index[i] = folder->index[i + 1];
+	}
+	// 清除掉最后一个多余的文件，置空
+	strcpy_s(folder->name[folder->itemSum - 1], "");
+	folder->index[folder->itemSum - 1] = NULL;
+	// 文件夹内的文件总数量减一
+	folder->itemSum--;
+	// 将Folder存回Block
+	SaveFolderToBlock(disk, folderInode->DataBlockIndex0[0], *folder);
+}
+
+// 删除文件操作
+void RM(Disk& disk, inode* folderInode, char* name) {
+	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
+	for (int i = 0; i < folder->itemSum; i++)
+	{
+		// 若找到了要删除的文件
+		if (strcmp(folder->name[i], name) == 0) {
+			int inodeID = folder->index[i];
+			int blockID = Inode[inodeID].DataBlockIndex0[0];
+			// 释放当前文件的inode，位图1变0
+			if (FreeAInode(inodeID)) {
+				// 释放当前文件的block区的内容
+				memset(&disk.data[blockID], 0, sizeof(block));
+				FreeABlock(disk, blockID);
+				DeleteItemInFolder(folderInode, folder, name, i);
+			}
+		}
+	}
+}
