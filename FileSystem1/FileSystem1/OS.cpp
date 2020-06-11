@@ -334,6 +334,15 @@ TextBlock* LoadTextBlockFromDisk(Disk& disk, int index)
 	return textBlock;
 }
 
+int max(int a, int b)
+{
+	if (a > b)
+	{
+		return a;
+	}
+	return b;
+}
+
 void NewTxt(inode* FolderInode)
 {
 	int indexInode = GetAInode();
@@ -379,7 +388,7 @@ void NewTxt(inode* FolderInode)
 
 
 
-	for (int i = 0; i < blockSize; i++)
+	for (int i = 0; i <max(blockSize,10); i++)
 	{
 		indexBlock = GetOneBlock(disk);
 		TextBlock textBlock;
@@ -387,6 +396,10 @@ void NewTxt(inode* FolderInode)
 		textBlock.inodeindex = indexInode;
 		Inode[indexInode].DataBlockIndex0[i] = indexBlock;
 		SaveTextBlockToDisk(disk, indexBlock, textBlock);
+
+	}
+	if (blockSize > 10)
+	{
 
 	}
 

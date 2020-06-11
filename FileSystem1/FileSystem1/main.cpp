@@ -9,6 +9,7 @@ int main()
 	InitRootFolder();
 
 	//showAll();
+	cout << sizeof(bool) << endl;
 	//cout << sizeof(Folder) << endl;
 	//cout << sizeof(int) << endl;
 	//cout << sizeof(char)* NameLen << endl;

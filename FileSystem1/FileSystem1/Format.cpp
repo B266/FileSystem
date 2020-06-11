@@ -10,5 +10,5 @@ bool Format()
 	SuperBlock.name;
 	SuperBlock.SuperEmptyBlockList = {};
 	//≥ı ºªØinodeŒªÕº
-
+	return true;
 }

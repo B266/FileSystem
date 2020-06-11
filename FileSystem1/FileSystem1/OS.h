@@ -25,7 +25,8 @@ const int MaxFreeBlockCount = 100;
 
 struct block
 {
-	char byte[512] = { 0 };//每一块占512字节
+	char byte[512] = { 0 };//每一块占512字节 
+	//这里用bool来存居然一个bool就要一个字节
 };
 
 
@@ -103,6 +104,10 @@ struct Folder
 	char name[20][20];
 };
 
+struct DataBlockIndexFile
+{
+	int index[sizeof(block) / sizeof(int)];
+};
 
 
 //---------------共享变量----------------------------------------------------------------------------------
@@ -110,7 +115,6 @@ extern superblock SuperBlock;
 extern inode Inode[InodeSum];
 
 extern bool InodeBitmap[InodeSum]; //inode位图，0表示inode节点没被用 1表示inode节点被用 最大支持512*8个inode节点索引
-
 
 extern Disk disk;
 
