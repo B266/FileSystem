@@ -149,8 +149,8 @@ bool Format();
 void SaveFolderToBlock(Disk& disk, int index, Folder folder);
 Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
-
-void AddItemInFolder(inode* folderInode, char* name, int inodeIndex);
+void AddItemInFolder(inode folderInode, char* name, int inodeIndex);
+void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int index); // 更改目录结构，删除一个文件
 
 
 void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock);
@@ -160,6 +160,7 @@ void ShowText(inode* fileinode);
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
 void LS(inode* Inode);
 void CD(char* name, inode** nowpath);
+void RM(Disk& disk, inode* folderInode, char* name); // 删除文件
 
 #endif 
 

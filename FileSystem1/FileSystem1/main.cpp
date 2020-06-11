@@ -57,6 +57,12 @@ int main()
 			NewFolder(disk, NowPath, name);
 			LS(NowPath);
 		}
+		if (strcmp(command, "rm") == 0) {
+			char name[20];
+			cin >> name;
+			RM(disk, NowPath, name);
+			LS(NowPath);
+		}
 	}
 
 	
