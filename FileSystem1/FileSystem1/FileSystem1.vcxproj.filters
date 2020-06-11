@@ -21,6 +21,9 @@
     <ClCompile Include="OS.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Format.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OS.h">
