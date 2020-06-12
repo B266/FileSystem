@@ -24,10 +24,12 @@
 10.	Delete 王理庚
 11.	Chmod  余斐然
 12.	Mkdir 李勐
-13.	Chdir 王理庚
+13.	Chdir 余斐然
 14.	Dir 余斐然
 15.	Format(init) 刘源
 16.	Find 刘源 
+17. cp 王理庚
+18. mv 王理庚
 
 
 ### 上层应用
