@@ -1,5 +1,6 @@
 #ifndef OS_H
 #define OS_H
+#pragma once
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -14,8 +15,16 @@ const int InodeBlockSum = 256;//存放inode的块的数量
 
 const int DataBlockSum = 1024;//数据块的数量
 const int DiskBlockSum = 1 + 1 + InodeBlockSum + DataBlockSum;//虚拟磁盘块总数：1超级快+1位图+256inode块+1024数据块=1282块
+
+//起始地址：0号放超级块，1——256号放inode，257——1281号放数据块 
+const int SuperBlockStart=0;
+const int InodeBitmapStart = 1;
+const int InodeStart=2;
+const int DataBlockStart = InodeBlockSum + 2;
+
+
 const int InodeSize = 128;//inode大小
-const int DataBlockStart = InodeBlockSum + 2;//1号放超级块，2——257号放inode，258——1282号放数据块
+
 
 const int InodeSumInOneBlock = BlockSize / InodeSize;//一块中inode数
 const int InodeSum = InodeSumInOneBlock * InodeBlockSum;//inode总数
@@ -25,7 +34,7 @@ const int MaxFreeBlockCount = 100;
 
 struct block
 {
-	bool bit[512 * 8] = { 0 };//每一块占512字节
+	char byte[512 * 8] = {0};//每一块占512字节
 };
 
 
@@ -63,10 +72,10 @@ struct Disk {//虚拟磁盘
 };
 
 
-struct FreeBlock//空闲块列表
+struct FreeBlock//空闲块成组链
 {
 
-	int EmptyBlockList[101];
+	int EmptyBlockList[101] = {};
 };
 
 struct superblock {//超级块
@@ -74,13 +83,14 @@ struct superblock {//超级块
 	int freeINodeSum;//空闲inode数
 	int totalBlockSum;//块总数
 	int freeBlockSum;//空闲块总数
-	char name[20] = { 0 };
+	char name[20] = {0};
 	int firstInode = 0;
-	FreeBlock SuperEmptyBlockList;//空闲块列表
+	FreeBlock SuperEmptyBlockList;//空闲块成组链
 
 };
 //---------------共享变量----------------------------------------------------------------------------------
 extern superblock SuperBlock;
+extern superblock* SuperP;
 extern inode Inode[InodeSum];
 
 extern bool InodeBitmap[InodeSum]; //inode位图，0表示inode节点没被用 1表示inode节点被用 最大支持512*8个inode节点索引
