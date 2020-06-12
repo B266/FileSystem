@@ -1,7 +1,11 @@
-#ifndef OS_H
-#define OS_H
+
+
+#ifndef FILESYSTEM_H
+#define FILESYSTEM_H
 #include <fstream>
 #include <iostream>
+#include <windows.h>
+
 using namespace std;
 extern FILE* fw;
 extern FILE* fr;
@@ -9,7 +13,7 @@ extern FILE* fr;
 const int FILE_NAME_LEN = 8;
 const int FILE_EXT_LEN = 8;
 
-const int BlockSize = 512;//¿é´óÐ¡£¬Ò»¿é´æ·Å512×Ö½Ú
+const int BlockSize = 512;//¿é´óÐ¡, Ò»¿é´æ·Å512×Ö½Ú
 const int InodeBlockSum = 256;//´æ·ÅinodeµÄ¿éµÄÊýÁ¿
 
 const int DataBlockSum = 1024;//Êý¾Ý¿éµÄÊýÁ¿
@@ -22,6 +26,10 @@ const int InodeSum = InodeSumInOneBlock * InodeBlockSum;//inode×ÜÊý
 
 const int FreeBlockSum = DataBlockSum / 100 + 1;
 const int MaxFreeBlockCount = 100;
+
+const int MAXPATH_LEN = 200;  //×î´óµØÖ·³¤¶È
+const int MAXUSERNAME_LEN = 20; //×î´óÓÃ»§Ãû³¤¶È
+const int MAXDEVICENAME_LEN = 20;//×î´óÉè±¸Ãû³Æ
 
 struct block
 {
@@ -120,6 +128,13 @@ extern bool InodeBitmap[InodeSum]; //inodeÎ»Í¼£¬0±íÊ¾inode½ÚµãÃ»±»ÓÃ 1±íÊ¾inode½
 extern Disk disk;
 
 extern inode* NowPath;//µ±Ç°Ä¿Â¼
+extern inode* RootPath; //¸ùÄ¿Â¼
+
+extern char NowPathName[MAXPATH_LEN];
+extern char NowUser[MAXUSERNAME_LEN]; 
+extern char DeviceName[MAXDEVICENAME_LEN];
+extern HANDLE CommandLineHandle;
+
 //----------------º¯ÊýÉùÃ÷-----------------------------------------------------------------------------
 void initInode();
 
@@ -154,18 +169,21 @@ bool Format();
 void SaveFolderToBlock(Disk& disk, int index, Folder folder);
 Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
-void AddItemInFolder(inode *folderInode, char* name, int inodeIndex);
+void AddItemInFolder(inode* folderInode, char* name, int inodeIndex);
 void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int index); // ¸ü¸ÄÄ¿Â¼½á¹¹£¬É¾³ýÒ»¸öÎÄ¼þ
 
 
 void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock);
 TextBlock* LoadTextBlockFromDisk(Disk& disk, int index);
 void NewTxt(inode* FolderInode);
-void ShowText(inode* fileinode);
+void ShowText(char* name, inode* nowpath);
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
 void LS(inode* Inode);
 void CD(char* name, inode** nowpath);
 void RM(Disk& disk, inode* folderInode, char* name); // É¾³ýÎÄ¼þ
 
+
+
+void ShowNowPathInfo();
 #endif 
 

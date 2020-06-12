@@ -1,26 +1,35 @@
-#include"FileSystem.h"
 
+#include"FileSystem.h"
+HANDLE CommandLineHandle;
 
 int main()
 {
-	cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
+	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	LPCWSTR title =(const WCHAR*) "FileSystem";
+	SetConsoleTitle(title);
+	//cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
 	initInode();
 	initGroupLink(disk);
 	InitRootFolder();
 
 	//showAll();
-	cout << "int: "  << sizeof(int) << endl;
+	//cout << "int: "  << sizeof(int) << endl;
 	//cout << sizeof(Folder) << endl;
 	//cout << sizeof(int) << endl;
 	//cout << sizeof(char)* NameLen << endl;
-	cout << "block: " << sizeof(block) << endl;
-	cout << "inode: " << sizeof(inode) << endl;
+	//cout << "block: " << sizeof(block) << endl;
+	//cout << "inode: " << sizeof(inode) << endl;
 
-	LS(NowPath);
+	//让输入缓冲区里有一个字符，为了输入效果
+	char n = '\n';
+	cin.putback(n);
+
 	while (1)
 	{
 		char command[20] = { 0 };
-		cin >> command;
+		ShowNowPathInfo();
+		cin>>command;
+
 		if (strcmp(command, "cd") == 0)
 		{
 			char name[20];
@@ -38,9 +47,10 @@ int main()
 		}
 		if (strcmp(command, "open") == 0)
 		{
-			int index;
-			cin >> index;
-			ShowText(&Inode[index]);
+			char name[20];
+			cin >> name;
+
+			ShowText(name,NowPath);
 		}
 		if (strcmp(command, "save") == 0)
 		{
@@ -63,9 +73,11 @@ int main()
 			cin >> name;
 			RM(disk, NowPath, name);
 		}
+		if (strcmp(command, "exit") == 0)
+		{
+			exit(0);
+		}
 	}
-
-	
 
 
 	return 0;
