@@ -141,10 +141,10 @@
   <ItemGroup>
     <ClCompile Include="Format.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="OS.cpp" />
+    <ClCompile Include="FileSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OS.h" />
+    <ClInclude Include="FileSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

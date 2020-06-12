@@ -1,42 +1,45 @@
-#include"OS.h"
+
+#include"FileSystem.h"
+HANDLE CommandLineHandle;
+
+
 
 int main()
 {
-	errno_t err=0;
-	err = fopen_s(&fw, "C:/Users/BlackBird/Desktop/OS.txt", "wb");
-	if (err == 0) 
-	{
-		cout << "openfile" << endl;
-		Format();
-
-	}
+	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetTitle("FileSystem");
+	HWND hw = FindWindow(L"ConsoleWindowClass", L"FileSystem");
+	SetLayeredWindowAttributes(hw, NULL, (200 * 100) / 100, LWA_ALPHA);
 	
-
-}
-
-/*int main()
-{
-	cout << sizeof(TextBlock) << endl;
+	//cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
 	initInode();
 	initGroupLink(disk);
 	InitRootFolder();
 
 	//showAll();
+	//cout << "int: "  << sizeof(int) << endl;
 	//cout << sizeof(Folder) << endl;
 	//cout << sizeof(int) << endl;
 	//cout << sizeof(char)* NameLen << endl;
-	cout << sizeof(inode) << endl;
-	LS(NowPath);
+	//cout << "block: " << sizeof(block) << endl;
+	//cout << "inode: " << sizeof(inode) << endl;
+
+	//让输入缓冲区里有一个字符，为了输入效果
+	char n = '\n';
+	cin.putback(n);
+
 	while (1)
 	{
 		char command[20] = { 0 };
-		cin >> command;
+		ShowNowPathInfo();
+		cin>>command;
+
 		if (strcmp(command, "cd") == 0)
 		{
 			char name[20];
 			cin >> name;
 			CD(name,&NowPath);
-			LS(NowPath);
+
 		}
 		if (strcmp(command, "ls") == 0)
 		{
@@ -48,9 +51,10 @@ int main()
 		}
 		if (strcmp(command, "open") == 0)
 		{
-			int index;
-			cin >> index;
-			ShowText(&Inode[index]);
+			char name[20];
+			cin >> name;
+
+			ShowText(name,NowPath);
 		}
 		if (strcmp(command, "save") == 0)
 		{
@@ -66,12 +70,19 @@ int main()
 			char name[20];
 			cin >> name;
 			NewFolder(disk, NowPath, name);
-			LS(NowPath);
+
+		}
+		if (strcmp(command, "rm") == 0) {
+			char name[20];
+			cin >> name;
+			RM(disk, NowPath, name, false);
+		}
+		if (strcmp(command, "exit") == 0)
+		{
+			exit(0);
 		}
 	}
 
-	
-
 
 	return 0;
-}*/
+}
