@@ -15,6 +15,7 @@
 .vs/ProjectSettings.json
 .vs/slnx.sqlite
 .vs/VSWorkspaceState.json
+.vs/slnx.sqlite
 FileSystem1/FileSystem1/data.dat
 FileSystem1/FileSystem1/FileSystem1.vcxproj.filters
 FileSystem1/FileSystem1/FileSystem1.vcxproj.user
