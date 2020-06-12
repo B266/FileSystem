@@ -186,5 +186,6 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // É¾³ýÎÄ
 
 
 void ShowNowPathInfo();
+void SetTitle(const char* Title);
 #endif 
 

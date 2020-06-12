@@ -2,12 +2,14 @@
 #include"FileSystem.h"
 HANDLE CommandLineHandle;
 
+
+
 int main()
 {
 	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	LPCWSTR title =L"FileSystem";
+
 	SetLayeredWindowAttributes(GetActiveWindow(), NULL, 200, LWA_ALPHA);
-	SetConsoleTitle(title);
+	
 	//cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
 	initInode();
 	initGroupLink(disk);

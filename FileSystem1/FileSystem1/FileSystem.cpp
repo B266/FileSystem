@@ -19,6 +19,9 @@ void ShowNowPathInfo()
 	cout << NowPathName;
 	SetConsoleTextAttribute(CommandLineHandle, 0x07);
 	cout << "$ ";
+	char title[MAXPATH_LEN + MAXUSERNAME_LEN + MAXDEVICENAME_LEN + 2];
+	sprintf_s(title, "%s@%s:%s", NowUser, DeviceName, NowPathName);
+	SetTitle(title);
 
 	char a = getchar();
 	if (a == '\n')
@@ -691,4 +694,13 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	if (!isSonFolder && !rmFlag) {
 		cout << "rm: 无法删除'" << name << "': 没有那个文件或目录" << endl;
 	}
+}
+
+
+void SetTitle(const char* Title)
+{
+	wchar_t title[MAXPATH_LEN];
+	size_t len = strlen(Title);
+	mbstowcs_s(&len, title,Title, (size_t)MAXPATH_LEN);
+	SetConsoleTitle(title);
 }
