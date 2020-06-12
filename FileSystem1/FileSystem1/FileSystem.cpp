@@ -1,4 +1,4 @@
-#include"OS.h"
+#include"FileSystem.h"
 superblock SuperBlock;
 Disk disk;
 inode Inode[InodeSum];
@@ -401,44 +401,9 @@ void NewTxt(inode* FolderInode)
 		memcpy(text + strlen(text), &n, 1);
 	}
 
-	Inode[indexInode].size = strlen(text);
+	SaveFileData(disk, FolderInode, text, strlen(text));
 
-	int dataOneBlock = (sizeof(block) - sizeof(int));
-	int blockSize = Inode[indexInode].size / dataOneBlock + 1;
-
-
-
-	for (int i = 0; i <min(blockSize,10); i++)
-	{
-		indexBlock = GetOneBlock(disk);
-		TextBlock textBlock;
-		memcpy(textBlock.data, &text[i * dataOneBlock], dataOneBlock);
-		textBlock.inodeindex = indexInode;
-		Inode[indexInode].DataBlockIndex0[i] = indexBlock;
-		SaveTextBlockToDisk(disk, indexBlock, textBlock);
-
-	}
-
-	DataBlockIndexFile dataBlockIndexFile;
 	
-	if (blockSize > 10)
-	{
-		for (int i = 10; i < min(blockSize,128+10); i++)
-		{
-			indexBlock = GetOneBlock(disk);
-			TextBlock textBlock;
-			memcpy(textBlock.data, &text[i * dataOneBlock], dataOneBlock);
-			textBlock.inodeindex = indexInode;
-			dataBlockIndexFile.index[i-10] = indexBlock;
-			SaveTextBlockToDisk(disk, indexBlock, textBlock);
-		}
-		int dataBlockIndex1FileIndex = GetOneBlock(disk);
-		SaveDataBlockIndexFileToDisk(dataBlockIndexFile, disk, dataBlockIndex1FileIndex);
-
-		Inode[indexInode].DataBlockIndex1 = dataBlockIndex1FileIndex;
-	}
-
-
 	//修改上级目录
 	AddItemInFolder(FolderInode, name, indexInode);
 
@@ -447,25 +412,86 @@ void NewTxt(inode* FolderInode)
 
 void ShowText(inode* fileinode)
 {
+	File* openFile = OpenFile(disk,fileinode);
+	
 	cout << "filename:" << fileinode->Name << endl;
+	cout << "data:" << endl;
+	cout << openFile->data;
+
+	
+}
+
+File* OpenFile(Disk &disk, inode* fileInode)
+{
+	File* newFile = new File;
+
+	newFile->dataSize = fileInode->size;
+	newFile->fileInode = fileInode;
+	newFile->data = new char[newFile->dataSize];
 
 	int CharInOneBlockSum = sizeof(block) - sizeof(int);
-	int fileDataBlockSum = fileinode->size / CharInOneBlockSum + 1;
+	int fileDataBlockSum = fileInode->size / CharInOneBlockSum + 1;
 
-	for (int i = 0; i < min(fileDataBlockSum,10); i++)
+	for (int i = 0; i < min(fileDataBlockSum, 10); i++)
 	{
-		TextBlock* textBlock = LoadTextBlockFromDisk(disk, fileinode->DataBlockIndex0[i]);
-		cout << textBlock->data << endl;
+		TextBlock* textBlock = LoadTextBlockFromDisk(disk, fileInode->DataBlockIndex0[i]);
+		memcpy(newFile->data+i* CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+
 	}
 	if (fileDataBlockSum > 10)
 	{
-		DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, fileinode->DataBlockIndex1);
+		DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, fileInode->DataBlockIndex1);
 		for (int i = 10; i < min(fileDataBlockSum, 128 + 10); i++)
 		{
-			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile.index[i-10]);
-			cout << textBlock->data << endl;
+			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile.index[i - 10]);
+			memcpy(newFile->data + i * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+			
 		}
 	}
+	return newFile;
+
+}
+
+void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
+{
+	fileInode->size = strlen(data);
+
+	int dataOneBlock = (sizeof(block) - sizeof(int));
+	int blockSize = fileInode->size / dataOneBlock + 1;
+	int indexBlock;
+
+
+	for (int i = 0; i < min(blockSize, 10); i++)
+	{
+		indexBlock = GetOneBlock(disk);
+		TextBlock textBlock;
+		memcpy(textBlock.data, &data[i * dataOneBlock], dataOneBlock);
+		textBlock.inodeindex = fileInode->inodeId;
+		fileInode->DataBlockIndex0[i] = indexBlock;
+		SaveTextBlockToDisk(disk, indexBlock, textBlock);
+
+	}
+
+	DataBlockIndexFile dataBlockIndexFile;
+
+	if (blockSize > 10)
+	{
+		for (int i = 10; i < min(blockSize, 128 + 10); i++)
+		{
+			indexBlock = GetOneBlock(disk);
+			TextBlock textBlock;
+			memcpy(textBlock.data, &data[i * dataOneBlock], dataOneBlock);
+			textBlock.inodeindex = fileInode->inodeId;
+			dataBlockIndexFile.index[i - 10] = indexBlock;
+			SaveTextBlockToDisk(disk, indexBlock, textBlock);
+		}
+		int dataBlockIndex1FileIndex = GetOneBlock(disk);
+		SaveDataBlockIndexFileToDisk(dataBlockIndexFile, disk, dataBlockIndex1FileIndex);
+
+		fileInode->DataBlockIndex1 = dataBlockIndex1FileIndex;
+	}
+
+
 
 }
 

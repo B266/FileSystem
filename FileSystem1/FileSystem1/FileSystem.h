@@ -84,7 +84,7 @@ struct superblock {//超级块
 
 
 struct File {
-	inode fileInode;
+	inode *fileInode;
 	int dataSize;
 	char* data;
 };
@@ -141,6 +141,10 @@ void LoadSuperBlockFromDisk(superblock& SuperBlock, Disk& disk);
 void LoadInodeFromDisk(bool& bitmap, inode& inodeList, Disk& disk);
 void SaveDisk();
 void LoadDisk();
+
+
+File* OpenFile(Disk &disk, inode *fileInode);  //读取某个inode的数据
+void SaveFileData(Disk&disk ,inode* fileInode,char *data,int datasize); //保存某个inode的数据
 
 bool Format();
 
