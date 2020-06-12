@@ -536,12 +536,12 @@ void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int inde
 
 // 删除文件操作
 void RM(Disk& disk, inode* folderInode, char* name) {
+	bool rmFlag = false;
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
 	// 计算当前的block数量
 	int blockNum = folderInode->size / (sizeof(block) - sizeof(int)) + 1;
 	// 遍历当前目录
-	for (int i = 0; i < folder->itemSum; i++)
-	{
+	for (int i = 0; i < folder->itemSum; i++) {
 		// 若找到了要删除的文件
 		if (strcmp(folder->name[i], name) == 0) {
 			int inodeID = folder->index[i];
@@ -549,18 +549,29 @@ void RM(Disk& disk, inode* folderInode, char* name) {
 			if (FreeAInode(inodeID)) {
 				// 释放当前文件的block区的内容
 				// 若blockNum数量<=10，则说明是在10个直接块中存储的数据
-				if (blockNum <= 10) {
-					for (int j = 0; j < blockNum; j++) {
-						int blockID = Inode[inodeID].DataBlockIndex0[i];
+				for (int j = 0; j < min(blockNum, 10); j++) {
+					int blockID = Inode[inodeID].DataBlockIndex0[j];
+					memset(&disk.data[blockID], 0, sizeof(block));
+					FreeABlock(disk, blockID);
+				}
+				// 若blockNum数量>10，则说明使用了一级间址
+				if (blockNum > 10) {
+					DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex1);
+					for (int j = 10; j < min(blockNum, 128 + 10); j++)
+					{
+						int blockID = dataBlockIndexFile.index[j - 10];
 						memset(&disk.data[blockID], 0, sizeof(block));
 						FreeABlock(disk, blockID);
 					}
 				}
-				else {
-
-				}
+				// 更改目录结构，传递当前目录Inode，folder，删除的文件名称，删除的文件在目录中的序号
 				DeleteItemInFolder(folderInode, folder, name, i);
+				rmFlag = true;
 			}
 		}
+	}
+	// 若没有删除成功
+	if (!rmFlag) {
+		cout << "rm: 无法删除'" << name << "': 没有那个文件或目录" << endl;
 	}
 }
