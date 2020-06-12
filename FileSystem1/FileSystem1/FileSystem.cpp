@@ -331,6 +331,8 @@ void InitRootFolder()
 	Folder rootF;
 	rootF.index[0] = SuperBlock.firstInode;
 	rootF.index[1] = SuperBlock.firstInode;
+	// 设置根目录的Inode
+	RootPath = &Inode[SuperBlock.firstInode];
 
 	sprintf_s(rootF.name[0], "..");
 	sprintf_s(rootF.name[1], ".");
