@@ -6,6 +6,7 @@ int main()
 {
 	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	LPCWSTR title =L"FileSystem";
+	SetLayeredWindowAttributes(GetActiveWindow(), NULL, 200, LWA_ALPHA);
 	SetConsoleTitle(title);
 	//cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
 	initInode();
@@ -35,7 +36,7 @@ int main()
 			char name[20];
 			cin >> name;
 			CD(name,&NowPath);
-			LS(NowPath);
+
 		}
 		if (strcmp(command, "ls") == 0)
 		{
@@ -66,7 +67,7 @@ int main()
 			char name[20];
 			cin >> name;
 			NewFolder(disk, NowPath, name);
-			LS(NowPath);
+
 		}
 		if (strcmp(command, "rm") == 0) {
 			char name[20];
