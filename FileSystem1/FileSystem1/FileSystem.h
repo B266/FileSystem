@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <windows.h>
+#include<wchar.h>
 
 using namespace std;
 extern FILE* fw;
