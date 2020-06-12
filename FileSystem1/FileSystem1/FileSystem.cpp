@@ -83,6 +83,7 @@ FreeBlock makeFreeBlock(Disk& disk, int index)
 	if (index + 100 < DiskBlockSum)
 	{
 		freeBlock.EmptyBlockList[1] = index + 100;
+		freeBlock.EmptyBlockList[0]++;
 	}
 	else
 	{
@@ -579,6 +580,7 @@ void CutPath(char* name)
 		if (count == 2)
 		{
 			name[i + 1] = '\0';
+			break;
 		}
 	}
 }
