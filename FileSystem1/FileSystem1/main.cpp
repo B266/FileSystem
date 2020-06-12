@@ -5,6 +5,7 @@ HANDLE CommandLineHandle;
 int main()
 {
 	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTitle(("FileSystem"));
 	//cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
 	initInode();
 	initGroupLink(disk);

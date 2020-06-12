@@ -560,7 +560,11 @@ void LS(inode* FolderInode)
 		}
 
 	}
-	cout << endl;
+	if (folder->itemSum > 2)
+	{
+		cout << endl;
+	}
+
 }
 
 void CutPath(char* name)
