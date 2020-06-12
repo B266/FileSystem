@@ -7,8 +7,9 @@ HANDLE CommandLineHandle;
 int main()
 {
 	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	SetLayeredWindowAttributes(GetActiveWindow(), NULL, 200, LWA_ALPHA);
+	SetTitle("FileSystem");
+	HWND hw = FindWindow(L"ConsoleWindowClass", L"FileSystem");
+	SetLayeredWindowAttributes(hw, NULL, (200 * 100) / 100, LWA_ALPHA);
 	
 	//cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
 	initInode();
