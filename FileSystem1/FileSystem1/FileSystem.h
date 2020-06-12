@@ -13,7 +13,7 @@ extern FILE* fr;
 const int FILE_NAME_LEN = 8;
 const int FILE_EXT_LEN = 8;
 
-const int BlockSize = 512;//块大小，一块存放512字节
+const int BlockSize = 512;//块大小, 一块存放512字节
 const int InodeBlockSum = 256;//存放inode的块的数量
 
 const int DataBlockSum = 1024;//数据块的数量
