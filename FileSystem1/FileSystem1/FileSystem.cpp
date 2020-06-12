@@ -642,7 +642,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	// 计算当前的block数量
 	int blockNum = folderInode->size / (sizeof(block) - sizeof(int)) + 1;
 	// 遍历当前目录
-	for (int i = 0; i < folder->itemSum; i++) {
+	for (int i = 2; i < folder->itemSum; i++) {
 		bool haveSuchAFile = false; // 判断是否有要删除的文件
 		// 若是子文件夹，则默认删除所有文件，设置有此文件
 		if (isSonFolder) { haveSuchAFile = true; }
