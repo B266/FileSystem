@@ -181,7 +181,7 @@ void ShowText(char* name, inode* nowpath);
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
 void LS(inode* Inode);
 void CD(char* name, inode** nowpath);
-void RM(Disk& disk, inode* folderInode, char* name); // 删除文件
+void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // 删除文件
 
 
 

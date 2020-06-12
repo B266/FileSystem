@@ -71,7 +71,7 @@ int main()
 		if (strcmp(command, "rm") == 0) {
 			char name[20];
 			cin >> name;
-			RM(disk, NowPath, name);
+			RM(disk, NowPath, name, false);
 		}
 		if (strcmp(command, "exit") == 0)
 		{
