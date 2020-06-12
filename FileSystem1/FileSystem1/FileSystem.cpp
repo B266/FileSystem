@@ -401,7 +401,7 @@ void NewTxt(inode* FolderInode)
 		memcpy(text + strlen(text), &n, 1);
 	}
 
-	SaveFileData(disk, FolderInode, text, strlen(text));
+	SaveFileData(disk, &Inode[indexInode], text, strlen(text));
 
 	
 	//修改上级目录
@@ -513,6 +513,7 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 	int blockId = GetOneBlock(disk);
 	strcpy_s(Inode[inodeId].Name, folderName);
 	Inode[inodeId].DataBlockIndex0[0] = blockId;
+	strcpy_s(Inode[inodeId].ExtensionName, "folder");
 	SaveFolderToBlock(disk, blockId, folderBlock);
 
 	//修改上级目录

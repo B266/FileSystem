@@ -38,8 +38,9 @@ const int NameLen = 18;
 struct inode {  //128byte
 	int inodeId = 0;
 	char Name[NameLen] = { 0 };
-	char username[20];						//文件所属用户
-	char usergroupname[20];						//文件所属用户组
+	char ExtensionName[NameLen] = { 0 };
+	char username[14];						//文件所属用户
+	char usergroupname[14];						//文件所属用户组
 	int permissions = 0;
 
 	int size;
@@ -153,7 +154,7 @@ bool Format();
 void SaveFolderToBlock(Disk& disk, int index, Folder folder);
 Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
-void AddItemInFolder(inode folderInode, char* name, int inodeIndex);
+void AddItemInFolder(inode *folderInode, char* name, int inodeIndex);
 void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int index); // 更改目录结构，删除一个文件
 
 
