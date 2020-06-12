@@ -562,29 +562,16 @@ void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int inde
 }
 
 // 删除文件操作
-void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
-	bool rmFlag = false; // 默认未删除指定文件
+void RM(Disk& disk, inode* folderInode, char* name) {
+	bool rmFlag = false;
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
 	// 计算当前的block数量
 	int blockNum = folderInode->size / (sizeof(block) - sizeof(int)) + 1;
-
-	// 遍历当前目录，找到指定的文件
+	// 遍历当前目录
 	for (int i = 0; i < folder->itemSum; i++) {
-		bool haveSuchAFile = false; // 判断是否有要删除的文件
-		// 若是子文件夹，则默认删除所有文件，设置有此文件
-		if (isSonFolder) { haveSuchAFile = true; }
-		// 若不是子文件夹并且找到了要删除的文件，设置有此文件
-		if (!isSonFolder && strcmp(folder->name[i], name) == 0) { haveSuchAFile = true; }
-		// 若有此文件，执行删除
-		if (haveSuchAFile) {
+		// 若找到了要删除的文件
+		if (strcmp(folder->name[i], name) == 0) {
 			int inodeID = folder->index[i];
-			// 若当前文件为文件夹，删除其中的所有文件
-			if (strcmp(Inode[inodeID].ExtensionName, "folder") == 0) {
-				inode* sonFolderInode = &Inode[inodeID];
-				char sonFolderName[20] = ""; // 在删除函数中占位
-				// 删除子文件夹中的所有文件
-				RM(disk, sonFolderInode, sonFolderName, true);
-			}
 			// 释放当前文件的inode，位图1变0
 			if (FreeAInode(inodeID)) {
 				// 释放当前文件的block区的内容
@@ -604,18 +591,14 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 						FreeABlock(disk, blockID);
 					}
 				}
-				// 若不是子文件夹，更改目录结构，传递当前目录Inode，folder，删除的文件名称，删除的文件在目录中的序号
-				// 如果是子文件夹，因为最后全都删了，就不用改了
-				if (!isSonFolder) {
-					DeleteItemInFolder(folderInode, folder, name, i);
-					rmFlag = true;
-					break;
-				}
+				// 更改目录结构，传递当前目录Inode，folder，删除的文件名称，删除的文件在目录中的序号
+				DeleteItemInFolder(folderInode, folder, name, i);
+				rmFlag = true;
 			}
 		}
 	}
-	// 不是子文件的情况下未找到文件，输出信息
-	if (!isSonFolder && !rmFlag) {
+	// 若没有删除成功
+	if (!rmFlag) {
 		cout << "rm: 无法删除'" << name << "': 没有那个文件或目录" << endl;
 	}
 }
