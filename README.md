@@ -12,8 +12,8 @@
 4.	Logout 李勐
 
 
-5.	Init 刘源
-6.	Save 余斐然
+5.	LoadDisk 刘源
+6.	SaveDisk 余斐然
 7.	导入文件 余斐然
 8.	正则（Regular） 刘源
 
@@ -24,7 +24,7 @@
 12.	Mkdir 李勐
 13.	Chdir 王理庚
 14.	Dir 余斐然
-15.	Format 刘源
+15.	Format(init) 刘源
 16.	Find 刘源
 
 ### 上层应用
