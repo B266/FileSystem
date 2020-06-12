@@ -5,7 +5,7 @@ HANDLE CommandLineHandle;
 int main()
 {
 	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	LPCSTR title = "FileSystem";
+	LPCWSTR title =(const WCHAR*) "FileSystem";
 	SetConsoleTitle(title);
 	//cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
 	initInode();
