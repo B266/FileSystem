@@ -1,11 +1,32 @@
+
 #include"FileSystem.h"
+
 superblock SuperBlock;
 Disk disk;
 inode Inode[InodeSum];
 bool InodeBitmap[InodeSum] = { 0 };
 inode* NowPath = &Inode[SuperBlock.firstInode];
+char NowPathName[MAXPATH_LEN] = "/";
+char NowUser[MAXUSERNAME_LEN] = "root";
+char DeviceName[MAXDEVICENAME_LEN] = "Disk0";
 
+void ShowNowPathInfo()
+{
+	SetConsoleTextAttribute(CommandLineHandle, FOREGROUND_GREEN);
+	cout << NowUser << "@" << DeviceName << ":";
+	SetConsoleTextAttribute(CommandLineHandle, 0x09);
+	//cout << ((strcmp(NowPathName, "/") == 0) ? "" : NowPathName);
+	cout << NowPathName;
+	SetConsoleTextAttribute(CommandLineHandle, 0x07);
+	cout << "$ ";
 
+	char a = getchar();
+	if (a == '\n')
+	{
+		char back = '\n';
+		cin.putback(back);
+	}
+}
 
 void initInode()
 {
@@ -94,7 +115,7 @@ void initGroupLink(Disk& disk)
 		FreeBlock freeBlock = makeFreeBlock(disk, i * 100 + DataBlockStart);
 
 		memset(&disk.data[i * 100 + DataBlockStart], 0, sizeof(block));
-		memcpy(&disk.data[i * 100 + DataBlockStart], &freeBlock, sizeof(FreeBlock));
+		::memcpy(&disk.data[i * 100 + DataBlockStart], &freeBlock, sizeof(FreeBlock));
 		//cout << "Make linklist " << i * 100 + DataBlockStart << endl;
 	}
 }
@@ -107,7 +128,7 @@ FreeBlock* LoadBlockAsFreeBlock(Disk& disk, int index)
 	}
 	FreeBlock* freeBlock = new FreeBlock;
 
-	memcpy(freeBlock, &disk.data[index], sizeof(FreeBlock));
+	::memcpy(freeBlock, &disk.data[index], sizeof(FreeBlock));
 	return freeBlock;
 }
 
@@ -119,7 +140,7 @@ bool SaveFreeBlockToDisk(Disk& disk, int index, FreeBlock& freeBlock)
 	}
 
 	memset(&disk.data[index], 0, sizeof(block));
-	memcpy(&disk.data[index], &freeBlock, sizeof(FreeBlock));
+	::memcpy(&disk.data[index], &freeBlock, sizeof(FreeBlock));
 	return true;
 }
 
@@ -208,38 +229,38 @@ void ShowAllBlock(Disk& disk)
 
 void SaveDataBlockIndexFileToDisk(DataBlockIndexFile& dataBlockIndexFile, Disk& disk, int index)
 {
-	memcpy(&disk.data[index], &dataBlockIndexFile, sizeof(DataBlockIndexFile));
+	::memcpy(&disk.data[index], &dataBlockIndexFile, sizeof(DataBlockIndexFile));
 }
 
 DataBlockIndexFile LoadDataBlockIndexFileFromDisk(Disk& disk, int index)
 {
 	DataBlockIndexFile dataBlockIndexFile;
-	memcpy(&dataBlockIndexFile, &disk.data[index], sizeof(block));
+	::memcpy(&dataBlockIndexFile, &disk.data[index], sizeof(block));
 	return dataBlockIndexFile;
 }
 
 
 void SaveSuperBlockToDisk(superblock& SuperBlock, Disk& disk)
 {
-	memcpy(&disk.data[0], &SuperBlock, sizeof(block));
+	::memcpy(&disk.data[0], &SuperBlock, sizeof(block));
 }
 void SaveInodeToDisk(bool& bitmap, inode& inodeList, Disk& disk)
 {
-	memcpy(&disk.data[1], &bitmap, sizeof(block));
-	memcpy(&disk.data[2], &inodeList, sizeof(inode) * InodeSum);
+	::memcpy(&disk.data[1], &bitmap, sizeof(block));
+	::memcpy(&disk.data[2], &inodeList, sizeof(inode) * InodeSum);
 
 }
 
 void LoadSuperBlockFromDisk(superblock& SuperBlock, Disk& disk)
 {
-	memcpy(&SuperBlock, &disk.data[0], sizeof(superblock));
+	::memcpy(&SuperBlock, &disk.data[0], sizeof(superblock));
 
 }
 
 void LoadInodeFromDisk(bool& bitmap, inode& inodeList, Disk& disk)
 {
-	memcpy(&bitmap, &disk.data[1], sizeof(block));
-	memcpy(&inodeList, &disk.data[2], sizeof(inode) * InodeSum);
+	::memcpy(&bitmap, &disk.data[1], sizeof(block));
+	::memcpy(&inodeList, &disk.data[2], sizeof(inode) * InodeSum);
 }
 
 void SaveDisk()
@@ -250,7 +271,7 @@ void SaveDisk()
 	out.open("data.dat", ios::out | ios::binary);
 
 	char* buffer = (char*)malloc(sizeof(Disk));
-	memcpy(buffer, &disk, sizeof(Disk));
+	::memcpy(buffer, &disk, sizeof(Disk));
 	out.write(buffer, sizeof(disk));
 	out.close();
 	free(buffer);
@@ -264,7 +285,7 @@ void LoadDisk()
 	char* buffer = (char*)malloc(sizeof(Disk));
 	in.read(buffer, sizeof(disk));
 	in.close();
-	memcpy(&disk, buffer, sizeof(Disk));
+	::memcpy(&disk, buffer, sizeof(Disk));
 	free(buffer);
 
 	LoadSuperBlockFromDisk(SuperBlock, disk);
@@ -280,7 +301,7 @@ void SaveFolderToBlock(Disk& disk, int index, Folder folder)
 	{
 		return;
 	}
-	memcpy(&disk.data[index], &folder, sizeof(Folder));
+	::memcpy(&disk.data[index], &folder, sizeof(Folder));
 }
 
 
@@ -291,7 +312,7 @@ Folder* loadFolderFromDisk(Disk& disk, int index)
 		return NULL;
 	}
 	Folder* folder = new Folder;
-	memcpy(folder, &disk.data[index], sizeof(Folder));
+	::memcpy(folder, &disk.data[index], sizeof(Folder));
 	return folder;
 
 }
@@ -332,7 +353,7 @@ void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock)
 	{
 		return;
 	}
-	memcpy(&disk.data[index], &textBlock, sizeof(TextBlock));
+	::memcpy(&disk.data[index], &textBlock, sizeof(TextBlock));
 }
 
 TextBlock* LoadTextBlockFromDisk(Disk& disk, int index)
@@ -342,26 +363,10 @@ TextBlock* LoadTextBlockFromDisk(Disk& disk, int index)
 		return NULL;
 	}
 	TextBlock* textBlock = new TextBlock;
-	memcpy(textBlock, &disk.data[index], sizeof(TextBlock));
+	::memcpy(textBlock, &disk.data[index], sizeof(TextBlock));
 	return textBlock;
 }
 
-int max(int a, int b)
-{
-	if (a > b)
-	{
-		return a;
-	}
-	return b;
-}
-int min(int a, int b)
-{
-	if (a < b)
-	{
-		return a;
-	}
-	return b;
-}
 
 void NewTxt(inode* FolderInode)
 {
@@ -395,10 +400,10 @@ void NewTxt(inode* FolderInode)
 		{
 			break;
 		}
-		memcpy(text+strlen(text), lineBuffer, strlen(lineBuffer));
+		::memcpy(text+strlen(text), lineBuffer, strlen(lineBuffer));
 		//Ìí¼Ó»»ÐÐ·û
 		char n = '\n';
-		memcpy(text + strlen(text), &n, 1);
+		::memcpy(text + strlen(text), &n, 1);
 	}
 
 	SaveFileData(disk, &Inode[indexInode], text, strlen(text));
@@ -410,8 +415,23 @@ void NewTxt(inode* FolderInode)
 }
 
 
-void ShowText(inode* fileinode)
+void ShowText(char* name,inode* nowpath)
 {
+	inode* fileinode=NULL;
+	Folder* folder = loadFolderFromDisk(disk, (nowpath)->DataBlockIndex0[0]);
+	for (int i = 0; i < folder->itemSum; i++)
+	{
+		if (strcmp(name, folder->name[i]) == 0)
+		{
+			fileinode =& Inode[folder->index[i]];
+
+		}
+	}
+
+	if (fileinode == NULL)
+	{
+		return;
+	}
 	File* openFile = OpenFile(disk,fileinode);
 	
 	cout << "filename:" << fileinode->Name << endl;
@@ -435,7 +455,7 @@ File* OpenFile(Disk &disk, inode* fileInode)
 	for (int i = 0; i < min(fileDataBlockSum, 10); i++)
 	{
 		TextBlock* textBlock = LoadTextBlockFromDisk(disk, fileInode->DataBlockIndex0[i]);
-		memcpy(newFile->data+i* CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+		::memcpy(newFile->data+i* CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
 
 	}
 	if (fileDataBlockSum > 10)
@@ -444,7 +464,7 @@ File* OpenFile(Disk &disk, inode* fileInode)
 		for (int i = 10; i < min(fileDataBlockSum, 128 + 10); i++)
 		{
 			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile.index[i - 10]);
-			memcpy(newFile->data + i * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+			::memcpy(newFile->data + i * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
 			
 		}
 	}
@@ -465,7 +485,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 	{
 		indexBlock = GetOneBlock(disk);
 		TextBlock textBlock;
-		memcpy(textBlock.data, &data[i * dataOneBlock], dataOneBlock);
+		::memcpy(textBlock.data, &data[i * dataOneBlock], dataOneBlock);
 		textBlock.inodeindex = fileInode->inodeId;
 		fileInode->DataBlockIndex0[i] = indexBlock;
 		SaveTextBlockToDisk(disk, indexBlock, textBlock);
@@ -480,7 +500,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 		{
 			indexBlock = GetOneBlock(disk);
 			TextBlock textBlock;
-			memcpy(textBlock.data, &data[i * dataOneBlock], dataOneBlock);
+			::memcpy(textBlock.data, &data[i * dataOneBlock], dataOneBlock);
 			textBlock.inodeindex = fileInode->inodeId;
 			dataBlockIndexFile.index[i - 10] = indexBlock;
 			SaveTextBlockToDisk(disk, indexBlock, textBlock);
@@ -521,13 +541,41 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 
 }
 
-void LS(inode* Inode)
+void LS(inode* FolderInode)
 {
-	Folder* folder = loadFolderFromDisk(disk, Inode->DataBlockIndex0[0]);
-	for (int i = 0; i < folder->itemSum; i++)
+	Folder* folder = loadFolderFromDisk(disk, FolderInode->DataBlockIndex0[0]);
+
+	for (int i = 2; i < folder->itemSum; i++)
 	{
-		cout << folder->index[i] << "\t";
-		cout << folder->name[i] << endl;
+		
+		if (strcmp(Inode[folder->index[i]].ExtensionName, "folder") == 0)
+		{
+			SetConsoleTextAttribute(CommandLineHandle, 0x09);
+			cout << folder->name[i] << "\t";
+			SetConsoleTextAttribute(CommandLineHandle, 0x0f);
+		}
+		else
+		{
+			cout << folder->name[i] << "\t";
+		}
+
+	}
+	cout << endl;
+}
+
+void CutPath(char* name)
+{
+	int count = 0;
+	for (int i = strlen(name)-1; i >= 0; i--)
+	{
+		if (name[i] == '/')
+		{
+			count++;
+		}
+		if (count == 2)
+		{
+			name[i + 1] = '\0';
+		}
 	}
 }
 
@@ -539,6 +587,26 @@ void CD(char* name, inode** nowpath)
 		if (strcmp(name, folder->name[i]) == 0)
 		{
 			*nowpath = &Inode[folder->index[i]];
+			char n[20] = "/";
+			char n1[20] = "..";
+			char n2[20] = ".";
+			if (strcmp(folder->name[i], n1) == 0)
+			{
+				CutPath(NowPathName);
+			}
+			else if(strcmp(folder->name[i],n2)==0)
+			{
+
+			}
+			else
+			{
+				memcpy(NowPathName + strlen(NowPathName), folder->name[i], sizeof(folder->name[i]));
+				if (strcmp(NowPathName, n) != 0 || strlen(NowPathName) != 1)
+				{
+					memcpy(NowPathName + strlen(NowPathName), &n, sizeof(n));
+				}
+			}
+
 
 		}
 	}
