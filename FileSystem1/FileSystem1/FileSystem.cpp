@@ -336,6 +336,7 @@ void InitRootFolder()
 	sprintf_s(rootF.name[0], "..");
 	sprintf_s(rootF.name[1], ".");
 	rootF.itemSum = 2;
+	strcpy_s(Inode[SuperBlock.firstInode].ExtensionName, "folder");
 	SaveFolderToBlock(disk, Inode[SuperBlock.firstInode].DataBlockIndex0[0], rootF);
 
 
@@ -592,34 +593,8 @@ void CutPath(char* name)
 void CD(char* name, inode** nowpath)
 {
 	Folder* folder = loadFolderFromDisk(disk, (*nowpath)->DataBlockIndex0[0]);
-	for (int i = 0; i < folder->itemSum; i++)
-	{
-		if (strcmp(name, folder->name[i]) == 0)
-		{
-			*nowpath = &Inode[folder->index[i]];
-			char n[20] = "/";
-			char n1[20] = "..";
-			char n2[20] = ".";
-			if (strcmp(folder->name[i], n1) == 0)
-			{
-				CutPath(NowPathName);
-			}
-			else if(strcmp(folder->name[i],n2)==0)
-			{
-
-			}
-			else
-			{
-				memcpy(NowPathName + strlen(NowPathName), folder->name[i], sizeof(folder->name[i]));
-				if (strcmp(NowPathName, n) != 0 || strlen(NowPathName) != 1)
-				{
-					memcpy(NowPathName + strlen(NowPathName), &n, sizeof(n));
-				}
-			}
-
-
-		}
-	}
+	
+	*nowpath = getInodeByPathName(name, *nowpath);
 
 }
 
@@ -704,4 +679,85 @@ void SetTitle(const char* Title)
 	size_t len = strlen(Title);
 	mbstowcs_s(&len, title,Title, (size_t)MAXPATH_LEN);
 	SetConsoleTitle(title);
+}
+
+// 通过路径获取Inode
+inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
+	inode* targetPath;
+	char nowPathName[MAXPATH_LEN];
+	// 备份当前路径
+	memcpy(nowPathName, NowPathName, strlen(NowPathName) + 1);
+
+	char path[10][20]; // 最多10层路径
+	int i = 0, pathNum = 0, k = 0;
+	// 切割路径
+	while (*(folderPathName + i) != '\0') {
+		// 若不是路径分割符
+		if (*(folderPathName + i) != '/') {
+			path[pathNum][k] = *(folderPathName + i);
+			k++;
+		}
+		// 若为路径分割符则准备填写下一个路径
+		if (*(folderPathName + i) == '/' && i != 0) {
+			path[pathNum][k] = '\0';
+			k = 0;
+			pathNum++;
+		}
+		i++;
+	}
+	// 最后一个字符若不是分割符则路径数量加1
+	if (*(folderPathName + i - 1) != '/') {
+		path[pathNum][k] = '\0';
+		pathNum++;
+	}
+
+	// 绝对地址
+	if (*folderPathName == '/') {
+		//cout << "绝对地址" << endl;
+		memcpy(NowPathName, "/", sizeof("/"));
+		targetPath = RootPath;
+	}
+	// 相对地址
+	else {
+		//cout << "相对地址" << endl;
+		targetPath = nowPath;
+	}
+
+	for (int p = 0; p < pathNum; p++) {
+		Folder* folder = loadFolderFromDisk(disk, targetPath->DataBlockIndex0[0]);
+		bool haveSuchAPath = false;
+		for (int q = 0; q < folder->itemSum; q++) {
+			if (strcmp(path[p], folder->name[q]) == 0 && strcmp(Inode[folder->index[q]].ExtensionName, "folder") == 0) {
+				targetPath = &Inode[folder->index[q]];
+				haveSuchAPath = true;
+				char n[20] = "/";
+				char n1[20] = "..";
+				char n2[20] = ".";
+				if (strcmp(folder->name[q], n1) == 0)
+				{
+					CutPath(NowPathName);
+				}
+				else if (strcmp(folder->name[q], n2) == 0)
+				{
+
+				}
+				else
+				{
+					memcpy(NowPathName + strlen(NowPathName), folder->name[q], sizeof(folder->name[q]));
+					if (strcmp(NowPathName, n) != 0 || strlen(NowPathName) != 1)
+					{
+						memcpy(NowPathName + strlen(NowPathName), &n, sizeof(n));
+					}
+				}
+				break; // 找到路径退出当前文件夹的遍历
+			}
+		}
+		if (!haveSuchAPath) {
+			memcpy(NowPathName, nowPathName, strlen(nowPathName) + 1);
+			cout << "没有'" << path[p] << "'那个路径" << endl;
+			return nowPath;
+		}
+	}
+	
+	return targetPath;
 }
