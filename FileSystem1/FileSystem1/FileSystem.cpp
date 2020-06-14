@@ -421,10 +421,10 @@ void NewTxt(inode* FolderInode)
 }
 
 
-void ShowText(char* name,inode* nowpath)
+void ShowText(char *pathName, inode* nowpath)
 {
 	inode* fileinode=NULL;
-	Folder* folder = loadFolderFromDisk(disk, (nowpath)->DataBlockIndex0[0]);
+	/*Folder* folder = loadFolderFromDisk(disk, (nowpath)->DataBlockIndex0[0]);
 	for (int i = 0; i < folder->itemSum; i++)
 	{
 		if (strcmp(name, folder->name[i]) == 0)
@@ -432,7 +432,23 @@ void ShowText(char* name,inode* nowpath)
 			fileinode =& Inode[folder->index[i]];
 
 		}
+	}*/
+	inode* path = nowpath; // 保存原路径不变
+	char nowPathName_backup[MAXPATH_LEN];
+	// 备份路径
+	memcpy(nowPathName_backup, NowPathName, strlen(NowPathName) + 1);
+	// 计算目标路径的inode
+	inode* targetpath = getInodeByPathName(pathName, path);
+	// 若当前inode为文件，则为fileinode赋值
+	if (strcmp(targetpath->ExtensionName, "folder") != 0) {
+		fileinode = targetpath;
 	}
+	// 若不是文件，则恢复路径
+	else {
+		memcpy(NowPathName, nowPathName_backup, strlen(nowPathName_backup) + 1);
+		cout << "该路径不是文件，无法打开" << endl;
+	}
+
 
 	if (fileinode == NULL)
 	{
@@ -593,8 +609,16 @@ void CutPath(char* name)
 void CD(char* name, inode** nowpath)
 {
 	Folder* folder = loadFolderFromDisk(disk, (*nowpath)->DataBlockIndex0[0]);
-	
-	*nowpath = getInodeByPathName(name, *nowpath);
+	inode** path = nowpath; // 备份nowpath
+	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
+
+	// 查看当前inode是否为文件夹，若是则更改nowpath
+	if (strcmp(targetpath->ExtensionName, "folder") == 0) {
+		*nowpath = targetpath;
+	}
+	else {
+		cout << "该路径为文件路径，无法进入" << endl;
+	}
 
 }
 
@@ -750,6 +774,13 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 					}
 				}
 				break; // 找到路径退出当前文件夹的遍历
+			}
+			// 若为最后一个路径，需要判断是不是文件，如果是，inode保留为其上级目录的inode
+			if (p == pathNum - 1 && strcmp(path[p], folder->name[q]) == 0 && strcmp(Inode[folder->index[q]].ExtensionName, "folder") != 0) {
+				targetPath = &Inode[folder->index[q]];
+				memcpy(NowPathName, nowPathName, strlen(nowPathName) + 1);
+				haveSuchAPath = true;
+				break;
 			}
 		}
 		if (!haveSuchAPath) {
