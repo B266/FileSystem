@@ -631,6 +631,7 @@ void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int inde
 // 删除文件操作
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	bool rmFlag = false; // 默认未删除指定文件
+	bool isFolder = false; // 判断是否为文件夹，输出不同的提示信息
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
 
 	// 遍历当前目录
@@ -638,8 +639,29 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 		bool haveSuchAFile = false; // 判断是否有要删除的文件
 		// 若是子文件夹，则默认删除所有文件，设置有此文件
 		if (isSonFolder) { haveSuchAFile = true; }
-		// 若不是子文件夹并且找到了要删除的文件，设置有此文件
-		if (!isSonFolder && strcmp(folder->name[i], name) == 0) { haveSuchAFile = true; }
+		// 若不是子文件夹并且找到了要删除的文件，
+		if (!isSonFolder && strcmp(folder->name[i], name) == 0) { 
+			// 判断是否为文件夹
+			if (strcmp(Inode[folder->index[i]].ExtensionName, "folder") == 0) {
+				isFolder = true;
+			}
+			if (isFolder) {
+				cout << "rm: 是否删除 目录 \"" << name << "\"?(y/n) ";
+			}
+			else {
+				cout << "rm: 是否删除 一般文件 \"" << name << "\"?(y/n) ";
+			}
+			// 确认是否删除该文件
+			char answer;
+			cin >> answer;
+			// 确认删除，设置有此文件
+			if (answer == 'y') {
+				haveSuchAFile = true;
+			}
+			else if (answer == 'n') {
+				return;
+			}
+		}
 		// 若有此文件，执行删除
 		if (haveSuchAFile) {
 			int inodeID = folder->index[i];
@@ -683,7 +705,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	}
 	// 不是子文件的情况下未找到文件，输出信息
 	if (!isSonFolder && !rmFlag) {
-		cout << "rm: 无法删除'" << name << "': 没有那个文件或目录" << endl;
+		cout << "rm: 无法删除\"" << name << "\": 没有那个文件或目录" << endl;
 	}
 }
 
