@@ -424,15 +424,6 @@ void NewTxt(inode* FolderInode)
 void ShowText(char *pathName, inode* nowpath)
 {
 	inode* fileinode=NULL;
-	/*Folder* folder = loadFolderFromDisk(disk, (nowpath)->DataBlockIndex0[0]);
-	for (int i = 0; i < folder->itemSum; i++)
-	{
-		if (strcmp(name, folder->name[i]) == 0)
-		{
-			fileinode =& Inode[folder->index[i]];
-
-		}
-	}*/
 	inode* path = nowpath; // 保存原路径不变
 	char nowPathName_backup[MAXPATH_LEN];
 	// 备份路径
@@ -608,7 +599,6 @@ void CutPath(char* name)
 
 void CD(char* name, inode** nowpath)
 {
-	Folder* folder = loadFolderFromDisk(disk, (*nowpath)->DataBlockIndex0[0]);
 	inode** path = nowpath; // 备份nowpath
 	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
 
@@ -642,8 +632,7 @@ void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int inde
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	bool rmFlag = false; // 默认未删除指定文件
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
-	// 计算当前的block数量
-	int blockNum = folderInode->size / (sizeof(block) - sizeof(int)) + 1;
+
 	// 遍历当前目录
 	for (int i = 2; i < folder->itemSum; i++) {
 		bool haveSuchAFile = false; // 判断是否有要删除的文件
@@ -654,6 +643,8 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 		// 若有此文件，执行删除
 		if (haveSuchAFile) {
 			int inodeID = folder->index[i];
+			// 计算当前的block数量
+			int blockNum = Inode[inodeID].size / (sizeof(block) - sizeof(int)) + 1;
 			// 若当前文件为文件夹，删除其中的所有文件
 			if (strcmp(Inode[inodeID].ExtensionName, "folder") == 0) {
 				inode* sonFolderInode = &Inode[inodeID];
