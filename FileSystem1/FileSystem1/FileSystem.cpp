@@ -716,7 +716,15 @@ void CD(char* name, inode** nowpath)
 }
 
 // 更改目录结构，删除一个文件
-void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int index) {
+void DeleteItemInFolder(inode* folderInode, inode* fileInode) {
+	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
+	int index = 0;
+	for (int i = 0; i < folder->itemSum; i++) {
+		if (fileInode->inodeId == folder->index[i]) {
+			index = i;
+			break;
+		}
+	}
 	// 将当前文件夹要删除的文件后边的所有文件的位置-1
 	for (int i = index; i < folder->itemSum - 1; i++) {
 		strcpy_s(folder->name[i], folder->name[i + 1]);
@@ -736,76 +744,89 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	bool rmFlag = false; // 默认未删除指定文件
 	bool isFolder = false; // 判断是否为文件夹，输出不同的提示信息
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
-
-	// 遍历当前目录
-	for (int i = 2; i < folder->itemSum; i++) {
-		bool haveSuchAFile = false; // 判断是否有要删除的文件
-		// 若是子文件夹，则默认删除所有文件，设置有此文件
-		if (isSonFolder) { haveSuchAFile = true; }
-		// 若不是子文件夹并且找到了要删除的文件，
-		if (!isSonFolder && strcmp(folder->name[i], name) == 0) { 
-			// 判断是否为文件夹
-			if (strcmp(Inode[folder->index[i]].ExtensionName, "folder") == 0) {
-				isFolder = true;
-			}
-			if (isFolder) {
-				cout << "rm: 是否删除 目录 \"" << name << "\"?(y/n) ";
-			}
-			else {
-				cout << "rm: 是否删除 一般文件 \"" << name << "\"?(y/n) ";
-			}
-			// 确认是否删除该文件
-			char answer;
-			cin >> answer;
-			// 确认删除，设置有此文件
-			if (answer == 'y') {
-				haveSuchAFile = true;
-			}
-			else if (answer == 'n') {
-				return;
-			}
+	inode* path;
+	if (!isSonFolder) {
+		path = getInodeByPathName(name, folderInode, 1);
+		if (path == NULL) {
+			return;
 		}
-		// 若有此文件，执行删除
-		if (haveSuchAFile) {
-			int inodeID = folder->index[i];
-			// 计算当前的block数量
-			int blockNum = Inode[inodeID].size / (sizeof(block) - sizeof(int)) + 1;
-			// 若当前文件为文件夹，删除其中的所有文件
-			if (strcmp(Inode[inodeID].ExtensionName, "folder") == 0) {
-				inode* sonFolderInode = &Inode[inodeID];
-				char sonFolderName[20] = ""; // 在删除函数中占位
-				// 删除子文件夹中的所有文件
-				RM(disk, sonFolderInode, sonFolderName, true);
+	}
+	else {
+		path = folderInode;
+	}
+
+	bool haveSuchAFile = false; // 判断是否有要删除的文件
+	// 若是子文件夹，则默认删除所有文件，设置有此文件
+	if (isSonFolder) { haveSuchAFile = true; }
+	// 若不是子文件夹并且找到了要删除的文件，
+	if (!isSonFolder) {
+		// 判断是否为文件夹
+		if (strcmp(path->ExtensionName, "folder") == 0) {
+			isFolder = true;
+		}
+		if (isFolder) {
+			cout << "rm: 是否删除 目录 \"" << name << "\"?(y/n) ";
+		}
+		else {
+			cout << "rm: 是否删除 一般文件 \"" << name << "\"?(y/n) ";
+		}
+		// 确认是否删除该文件
+		char answer;
+		cin >> answer;
+		// 确认删除，设置有此文件
+		if (answer == 'y') {
+			haveSuchAFile = true;
+		}
+		else if (answer == 'n') {
+			return;
+		}
+	}
+	// 若有此文件，执行删除
+	if (haveSuchAFile) {
+		//int inodeID = folder->index[i];
+		// 计算当前的block数量
+		int blockNum = path->size / (sizeof(block) - sizeof(int)) + 1;
+		// 若当前文件为文件夹，删除其中的所有文件
+		if (strcmp(path->ExtensionName, "folder") == 0) {
+			//inode* sonFolderInode = &Inode[inodeID];
+			Folder* sonFolder = loadFolderFromDisk(disk, path->DataBlockIndex0[0]);
+			char sonFolderName[20] = ""; // 在删除函数中占位
+			// 删除子文件夹中的所有文件
+			for (int i = 2; i < sonFolder->itemSum; i++) {
+				inode* sonFile = &Inode[sonFolder->index[i]];
+				RM(disk, sonFile, sonFolderName, true);
 			}
-			// 释放当前文件的inode，位图1变0
-			if (FreeAInode(inodeID)) {
-				// 释放当前文件的block区的内容
-				// 若blockNum数量<=10，则说明是在10个直接块中存储的数据
-				for (int j = 0; j < min(blockNum, 10); j++) {
-					int blockID = Inode[inodeID].DataBlockIndex0[j];
+
+		}
+		// 释放当前文件的inode，位图1变0
+		if (FreeAInode(path->inodeId)) {
+			// 释放当前文件的block区的内容
+			// 若blockNum数量<=10，则说明是在10个直接块中存储的数据
+			for (int j = 0; j < min(blockNum, 10); j++) {
+				int blockID = path->DataBlockIndex0[j];
+				memset(&disk.data[blockID], 0, sizeof(block));
+				FreeABlock(disk, blockID);
+			}
+			// 若blockNum数量>10，则说明使用了一级间址
+			if (blockNum > 10) {
+				DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex1);
+				for (int j = 10; j < min(blockNum, 128 + 10); j++)
+				{
+					int blockID = dataBlockIndexFile.index[j - 10];
 					memset(&disk.data[blockID], 0, sizeof(block));
 					FreeABlock(disk, blockID);
 				}
-				// 若blockNum数量>10，则说明使用了一级间址
-				if (blockNum > 10) {
-					DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex1);
-					for (int j = 10; j < min(blockNum, 128 + 10); j++)
-					{
-						int blockID = dataBlockIndexFile.index[j - 10];
-						memset(&disk.data[blockID], 0, sizeof(block));
-						FreeABlock(disk, blockID);
-					}
-				}
-				// 若不是子文件夹，更改目录结构，传递当前目录Inode，folder，删除的文件名称，删除的文件在目录中的序号
-				// 如果是子文件夹，因为最后全都删了，就不用改了
-				if (!isSonFolder) {
-					DeleteItemInFolder(folderInode, folder, name, i);
-					rmFlag = true;
-					break;
-				}
+			}
+			// 若不是子文件夹，更改目录结构，传递当前目录Inode，folder，删除的文件名称，删除的文件在目录中的序号
+			// 如果是子文件夹，因为最后全都删了，就不用改了
+			if (!isSonFolder) {
+				inode* lastFolderPath = getInodeByPathName(name, folderInode, 2);
+				DeleteItemInFolder(lastFolderPath, path);
+				rmFlag = true;
 			}
 		}
 	}
+
 	// 不是子文件的情况下未找到文件，输出信息
 	if (!isSonFolder && !rmFlag) {
 		cout << "rm: 无法删除\"" << name << "\": 没有那个文件或目录" << endl;
@@ -867,6 +888,10 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 		targetPath = nowPath;
 	}
 
+	if (pathNum == 1 && mode == 2) {
+		return nowPath;
+	}
+
 	for (int p = 0; p < pathNum; p++) {
 		Folder* folder = loadFolderFromDisk(disk, targetPath->DataBlockIndex0[0]);
 		bool haveSuchAPath = false;
@@ -888,7 +913,7 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 			return NULL;
 		}
 		// 如果mode=2，返回倒数第二个节点
-		if (p == pathNum - 2 && mode == 2) {
+		if (mode == 2 && p == pathNum - 2) {
 			break;
 		}
 	}

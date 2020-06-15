@@ -173,7 +173,7 @@ void SaveFolderToBlock(Disk& disk, int index, Folder folder);
 Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
 void AddItemInFolder(inode* folderInode, char* name, int inodeIndex);
-void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int index); // 更改目录结构，删除一个文件
+void DeleteItemInFolder(inode* folderInode, inode* fileInode); // 更改目录结构，删除一个文件
 inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode);
 
 
