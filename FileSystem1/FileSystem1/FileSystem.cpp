@@ -429,7 +429,7 @@ void ShowText(char *pathName, inode* nowpath)
 	// 备份路径
 	memcpy(nowPathName_backup, NowPathName, strlen(NowPathName) + 1);
 	// 计算目标路径的inode
-	inode* targetpath = getInodeByPathName(pathName, path);
+	inode* targetpath = getInodeByPathName(pathName, path, 1);
 	// 若当前inode为文件，则为fileinode赋值
 	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0) {
 		fileinode = targetpath;
@@ -600,7 +600,7 @@ void CutPath(char* name)
 void CD(char* name, inode** nowpath)
 {
 	inode** path = nowpath; // 备份nowpath
-	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
+	inode* targetpath = getInodeByPathName(name, *path, 1); // 获取目标地址的inode
 
 	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
 	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
@@ -626,6 +626,10 @@ void CD(char* name, inode** nowpath)
 		if (*(name + i - 1) != '/') {
 			path[pathNum][k] = '\0';
 			pathNum++;
+		}
+		// 绝对地址
+		if (*name == '/') {
+			memcpy(NowPathName, "/", sizeof("/"));
 		}
 		for (int p = 0; p < pathNum; p++) {
 			char n[20] = "/";
@@ -762,16 +766,18 @@ void SetTitle(const char* Title)
 }
 
 // 通过路径获取Inode
-inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
+inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) {
 	/*
 		函数有几种返回结果
 		1. 路径中的任意一环不存在，则返回NULL
-		2. 路径存在，最后一个路径是文件夹，则返回其inode
+		2. 路径格式不符合规范，返回NULL
+		3. 路径存在，则返回其inode
+		   (1)mode=1时，返回路径的最后一个节点的inode
+		   (2)mode=2时，不会判断最后一个节点是否存在，提前结束循环，返回路径的倒数第二个节点的inode
+		使用函数建议：使用 if(targetpath != NULL) 判断是否获取了inode
+					使用 if(strcmp(targetpath->ExtensionName, "folder") == 0) 判断当前inode是否为文件夹格式
 	*/
 	inode* targetPath;
-	char nowPathName[MAXPATH_LEN];
-	// 备份当前路径
-	memcpy(nowPathName, NowPathName, strlen(NowPathName) + 1);
 
 	char path[10][20]; // 最多10层路径
 	int i = 0, pathNum = 0, k = 0;
@@ -798,13 +804,10 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 
 	// 绝对地址
 	if (*folderPathName == '/') {
-		//cout << "绝对地址" << endl;
-		memcpy(NowPathName, "/", sizeof("/"));
 		targetPath = RootPath;
 	}
 	// 相对地址
 	else {
-		//cout << "相对地址" << endl;
 		targetPath = nowPath;
 	}
 
@@ -820,8 +823,17 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 
 		}
 		if (!haveSuchAPath) {
-			cout << "没有'" << path[p] << "'那个路径" << endl;
+			cout << "没有\"" << path[p] << "\"那个路径" << endl;
 			return NULL;
+		}
+		// 若在最后一个路径之前出现普通文件，输出错误信息
+		if (p != pathNum - 1 && strcmp(targetPath->ExtensionName, "folder") != 0) {
+			cout << "路径不符合规范，\"" << path[p] << "\" 是普通文件格式" << endl;
+			return NULL;
+		}
+		// 如果mode=2，返回倒数第二个节点
+		if (p == pathNum - 2 && mode == 2) {
+			break;
 		}
 	}
 	
@@ -830,7 +842,7 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 
 bool Chmod(char* pathname, int permission,inode*nowpath)
 {
-	inode* Inode = getInodeByPathName(pathname, nowpath);
+	inode* Inode = getInodeByPathName(pathname, nowpath, 1);
 	if (Inode != NULL)
 	{
 		return Chmod(Inode, permission);
