@@ -183,8 +183,8 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
 void LS(inode* Inode);
 void CD(char* name, inode** nowpath);
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // É¾³ýÎÄ¼þ
-void Chmod(inode* Inode, int permission);
-void Chomd(char* pathname, int permission, inode* nowpath);
+bool Chmod(inode* Inode, int permission);
+bool Chmod(char* pathname, int permission, inode* nowpath);
 
 
 void ShowNowPathInfo();

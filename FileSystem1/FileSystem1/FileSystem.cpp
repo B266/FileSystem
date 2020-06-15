@@ -812,19 +812,26 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 	return targetPath;
 }
 
-void Chomd(char* pathname, int permission,inode*nowpath)
+bool Chmod(char* pathname, int permission,inode*nowpath)
 {
 	inode* Inode = getInodeByPathName(pathname, nowpath);
 	if (Inode != NULL)
 	{
-		Chmod(Inode, permission);
+		return Chmod(Inode, permission);
+		
 	}
+	return false;
 
 }
 
-void Chmod(inode* Inode,int permission)
+bool Chmod(inode* Inode,int permission)
 {
-	if(Inode!=NULL)
+	if (Inode != NULL)
+	{
 		Inode->permissions = permission;
+		return true;
+	}
+	return false;
+		
 
 }

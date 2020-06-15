@@ -89,7 +89,7 @@ int main()
 			int permission;
 			cin >> permission;
 			
-			Chomd(path,  permission, NowPath);
+			Chmod(path,  permission, NowPath);
 		}
 		else
 		{
