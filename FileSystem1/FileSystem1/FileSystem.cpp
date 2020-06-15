@@ -391,11 +391,11 @@ void NewTxt(inode* FolderInode)
 	strcpy_s(Inode[indexInode].Name, name);
 	getchar();
 	getchar();
-	const int maxsize = 99999;
+	const int maxsize = 1024*1024;
 
 	//写入自己的datablock
-	char text[maxsize] = { 0 };
-
+	char* text = NULL;
+	text = (char*)malloc(512 * sizeof(char));
 	cout << "data:";
 
 	while (1)
@@ -524,8 +524,62 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 		fileInode->DataBlockIndex1 = dataBlockIndex1FileIndex;
 	}
 
+	DataBlockIndexFile dataBlockIndexFile1;
+	DataBlockIndexFile dataBlockIndexFile2;
 
-
+	if (blockSize > 138)
+	{
+		if (blockSize > 138 + 128)
+		{
+			int dataBlockIndex2FileIndex = GetOneBlock(disk);//二级间接块
+			for (int i = 0; i < (blockSize - 138) / 128; i++)
+			{
+				for (int j = 0; j < 128; j++)
+				{
+					indexBlock = GetOneBlock(disk);
+					TextBlock textBlock;
+					::memcpy(textBlock.data, &data[138+128*i+j], dataOneBlock);
+					textBlock.inodeindex = fileInode->inodeId;
+					dataBlockIndexFile1.index[j] = indexBlock;
+					SaveTextBlockToDisk(disk, indexBlock, textBlock);
+				}
+				int dataBlockIndexFileIndex = GetOneBlock(disk);//二级间接块指向的目录块
+				SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
+				dataBlockIndexFile2.index[i] = dataBlockIndexFileIndex;
+			} 
+			int t = (blockSize - 138) / 128;
+			for (int j = 0; j < (blockSize - 138) % 128; j++)
+			{
+				indexBlock = GetOneBlock(disk);
+				TextBlock textBlock;
+				::memcpy(textBlock.data, &data[138 + 128 * t + j], dataOneBlock);
+				textBlock.inodeindex = fileInode->inodeId;
+				dataBlockIndexFile1.index[j] = indexBlock;
+				SaveTextBlockToDisk(disk, indexBlock, textBlock);
+			}
+			int dataBlockIndexFileIndex = GetOneBlock(disk);//二级间接块指向的目录块
+			SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
+			dataBlockIndexFile2.index[t] = dataBlockIndexFileIndex;
+			SaveDataBlockIndexFileToDisk(dataBlockIndexFile2, disk, dataBlockIndex2FileIndex);
+		}
+		else
+		{
+			int dataBlockIndex2FileIndex = GetOneBlock(disk);//二级间接块
+			for (int j = 0; j < (blockSize - 138) % 128; j++)
+			{
+				indexBlock = GetOneBlock(disk);
+				TextBlock textBlock;
+				::memcpy(textBlock.data, &data[138 + j], dataOneBlock);
+				textBlock.inodeindex = fileInode->inodeId;
+				dataBlockIndexFile1.index[j] = indexBlock;
+				SaveTextBlockToDisk(disk, indexBlock, textBlock);
+			}
+			int dataBlockIndexFileIndex = GetOneBlock(disk);//二级间接块指向的目录块
+			SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
+			dataBlockIndexFile2.index[0] = dataBlockIndexFileIndex;
+			SaveDataBlockIndexFileToDisk(dataBlockIndexFile2, disk, dataBlockIndex2FileIndex);
+		}
+	}
 }
 
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
