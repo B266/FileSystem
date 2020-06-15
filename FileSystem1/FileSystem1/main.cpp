@@ -27,82 +27,70 @@ int main()
 	//cout << "block: " << sizeof(block) << endl;
 	//cout << "inode: " << sizeof(inode) << endl;
 
-	//让输入缓冲区里有一个字符，为了输入效果
-	char n = '\n';
-	cin.putback(n);
+
+	
 
 	while (1)
 	{
-		char command[20] = { 0 };
 		ShowNowPathInfo();
-		cin>>command;
+		char Arr[MAXPATH_LEN * 3] = { 0 };
+		char Arr1[MAXPATH_LEN] = { 0 };
+		char Arr2[MAXPATH_LEN] = { 0 };
+		char Arr3[MAXPATH_LEN] = { 0 };
+		cin.getline(Arr, MAXPATH_LEN * 3);
+		CutArr(Arr, Arr1, Arr2, Arr3);
+		//切成三个命令参数来计算
 
-		if (strcmp(command, "cd") == 0)
+		if (strcmp(Arr1, "cd") == 0)
 		{
-			char name[MAXPATH_LEN];
-			cin >> name;
-			CD(name,&NowPath);
+			CD(Arr2,&NowPath);
 
 		}
-		else if (strcmp(command, "ls") == 0)
+		else if (strcmp(Arr1, "ls") == 0)
 		{
 			LS(NowPath);
 		}
-		else if (strcmp(command, "new") == 0)
+		else if (strcmp(Arr1, "new") == 0)
 		{
 			NewTxt(NowPath);
 		}
-		else if (strcmp(command, "open") == 0)
+		else if (strcmp(Arr1, "open") == 0)
 		{
-			char name[MAXPATH_LEN];
-			cin >> name;
-
-			ShowText(name, NowPath);
+			ShowText(Arr2, NowPath);
 		}
-		else if (strcmp(command, "save") == 0)
+		else if (strcmp(Arr1, "save") == 0)
 		{
 			SaveDisk();
 		}
-		else if (strcmp(command, "load") == 0)
+		else if (strcmp(Arr1, "load") == 0)
 		{
 			LoadDisk();
+			NowPath = RootPath;
+			strcpy_s(NowPathName, "/");
+			
 		}
-		else if (strcmp(command, "mkdir") == 0)
+		else if (strcmp(Arr1, "mkdir") == 0)
 		{
-
-			char name[20];
-			cin >> name;
-			NewFolder(disk, NowPath, name);
+			NewFolder(disk, NowPath, Arr2);
 
 		}
-		else if (strcmp(command, "rm") == 0) {
-			char name[MAXPATH_LEN];
-			cin >> name;
-			RM(disk, NowPath, name, false);
+		else if (strcmp(Arr1, "rm") == 0) {
+			RM(disk, NowPath, Arr2, false);
 		}
-		else if (strcmp(command, "exit") == 0)
+		else if (strcmp(Arr1, "exit") == 0)
 		{
 			return 0;
 		}
-		else if (strcmp(command, "chmod") == 0)
+		else if (strcmp(Arr1, "chmod") == 0)
 		{
-			char path[MAXPATH_LEN];
-			cin >> path;
-			int permission;
-			cin >> permission;
 			
-			Chmod(path,  permission, NowPath);
+			Chmod(Arr2, atoi(Arr3),NowPath );
 		}
-		else if (strcmp(command, "complier") == 0)
+		else if (strcmp(Arr1, "complier") == 0)
 		{
-			char filename[MAXPATH_LEN];
-			cin >> filename;
-			complier(filename, NowPath, disk);
+			complier(Arr2, NowPath, disk);
 		}
-		else
-		{
-			cout << endl;
-		}
+
 	}
 
 

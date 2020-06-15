@@ -192,6 +192,7 @@ int complier(char* filename, inode* NowPath, Disk& disk);
 void ShowNowPathInfo();
 void SetTitle(const char* Title);
 
+void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3);
 
 
 

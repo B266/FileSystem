@@ -25,13 +25,6 @@ void ShowNowPathInfo()
 	char title[MAXPATH_LEN + MAXUSERNAME_LEN + MAXDEVICENAME_LEN + 2];
 	sprintf_s(title, "%s@%s:%s", NowUser, DeviceName, NowPathName);
 	SetTitle(title);
-
-	char a = getchar();
-	if (a == '\n')
-	{
-		char back = '\n';
-		cin.putback(back);
-	}
 }
 
 void initInode()
@@ -297,6 +290,7 @@ void LoadDisk()
 
 	LoadSuperBlockFromDisk(SuperBlock, disk);
 	LoadInodeFromDisk(*InodeBitmap, *Inode, disk);
+	
 }
 
 
@@ -969,4 +963,54 @@ int complier(char* filename,inode* NowPath,Disk&disk)
 		AddItemInFolder(folderInode, CodeInode->Name, CodeInode->inodeId);
 	}
 	return 0;
+}
+
+
+void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
+{
+	int indexL[3] = { 0,0,0 };
+	int indexR[3] = { -1,-1,-1 };
+	int count = 0;
+	bool spaceFlag = false;
+	for (int i = 0; i < strlen(Arr); i++)
+	{
+		//遇到第一个空格的时候
+		if (Arr[i] == ' '&&spaceFlag==false)
+		{
+			indexR[count] = i - 1;
+			count++;
+			spaceFlag = true;
+		}
+		//遇到第一个不是空格的时候
+		if (Arr[i] != ' ' && spaceFlag == true)
+		{
+			indexL[count] = i;
+			spaceFlag = false;
+		}
+		if (count == 3)
+		{
+			break;
+		}
+	}
+	if (indexR[count] == -1)
+	{
+		indexR[count] = strlen(Arr) - 1;
+	}
+	
+	if (indexR[0] != -1)
+	{
+		memset(Arr1, 0, MAXPATH_LEN);
+		memcpy(Arr1, Arr + indexL[0], (indexR[0] - indexL[0] + 1) * sizeof(char));
+	}
+	if (indexR[1] != -1)
+	{
+		memset(Arr2, 0, MAXPATH_LEN);
+		memcpy(Arr2, Arr + indexL[1], (indexR[1] - indexL[1] + 1) * sizeof(char));
+	}
+	if (indexR[2] != -1)
+	{
+		memset(Arr3, 0, MAXPATH_LEN);
+		memcpy(Arr3, Arr + indexL[2], (indexR[2] - indexL[2] + 1) * sizeof(char));
+	}
+
 }
