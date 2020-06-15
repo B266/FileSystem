@@ -421,18 +421,25 @@ void NewTxt(inode* FolderInode)
 }
 
 
-void ShowText(char* name,inode* nowpath)
+void ShowText(char *pathName, inode* nowpath)
 {
 	inode* fileinode=NULL;
-	Folder* folder = loadFolderFromDisk(disk, (nowpath)->DataBlockIndex0[0]);
-	for (int i = 0; i < folder->itemSum; i++)
-	{
-		if (strcmp(name, folder->name[i]) == 0)
-		{
-			fileinode =& Inode[folder->index[i]];
-
-		}
+	inode* path = nowpath; // 保存原路径不变
+	char nowPathName_backup[MAXPATH_LEN];
+	// 备份路径
+	memcpy(nowPathName_backup, NowPathName, strlen(NowPathName) + 1);
+	// 计算目标路径的inode
+	inode* targetpath = getInodeByPathName(pathName, path);
+	// 若当前inode为文件，则为fileinode赋值
+	if (strcmp(targetpath->ExtensionName, "folder") != 0) {
+		fileinode = targetpath;
 	}
+	// 若不是文件，则恢复路径
+	else {
+		memcpy(NowPathName, nowPathName_backup, strlen(nowPathName_backup) + 1);
+		cout << "该路径不是文件，无法打开" << endl;
+	}
+
 
 	if (fileinode == NULL)
 	{
@@ -592,9 +599,16 @@ void CutPath(char* name)
 
 void CD(char* name, inode** nowpath)
 {
-	Folder* folder = loadFolderFromDisk(disk, (*nowpath)->DataBlockIndex0[0]);
-	
-	*nowpath = getInodeByPathName(name, *nowpath);
+	inode** path = nowpath; // 备份nowpath
+	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
+
+	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
+	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
+		*nowpath = targetpath;
+	}
+	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0){
+		cout << "该路径为文件路径，无法进入" << endl;
+	}
 
 }
 
@@ -617,19 +631,42 @@ void DeleteItemInFolder(inode* folderInode, Folder* folder, char* name, int inde
 // 删除文件操作
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	bool rmFlag = false; // 默认未删除指定文件
+	bool isFolder = false; // 判断是否为文件夹，输出不同的提示信息
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
-	// 计算当前的block数量
-	int blockNum = folderInode->size / (sizeof(block) - sizeof(int)) + 1;
+
 	// 遍历当前目录
 	for (int i = 2; i < folder->itemSum; i++) {
 		bool haveSuchAFile = false; // 判断是否有要删除的文件
 		// 若是子文件夹，则默认删除所有文件，设置有此文件
 		if (isSonFolder) { haveSuchAFile = true; }
-		// 若不是子文件夹并且找到了要删除的文件，设置有此文件
-		if (!isSonFolder && strcmp(folder->name[i], name) == 0) { haveSuchAFile = true; }
+		// 若不是子文件夹并且找到了要删除的文件，
+		if (!isSonFolder && strcmp(folder->name[i], name) == 0) { 
+			// 判断是否为文件夹
+			if (strcmp(Inode[folder->index[i]].ExtensionName, "folder") == 0) {
+				isFolder = true;
+			}
+			if (isFolder) {
+				cout << "rm: 是否删除 目录 \"" << name << "\"?(y/n) ";
+			}
+			else {
+				cout << "rm: 是否删除 一般文件 \"" << name << "\"?(y/n) ";
+			}
+			// 确认是否删除该文件
+			char answer;
+			cin >> answer;
+			// 确认删除，设置有此文件
+			if (answer == 'y') {
+				haveSuchAFile = true;
+			}
+			else if (answer == 'n') {
+				return;
+			}
+		}
 		// 若有此文件，执行删除
 		if (haveSuchAFile) {
 			int inodeID = folder->index[i];
+			// 计算当前的block数量
+			int blockNum = Inode[inodeID].size / (sizeof(block) - sizeof(int)) + 1;
 			// 若当前文件为文件夹，删除其中的所有文件
 			if (strcmp(Inode[inodeID].ExtensionName, "folder") == 0) {
 				inode* sonFolderInode = &Inode[inodeID];
@@ -668,7 +705,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	}
 	// 不是子文件的情况下未找到文件，输出信息
 	if (!isSonFolder && !rmFlag) {
-		cout << "rm: 无法删除'" << name << "': 没有那个文件或目录" << endl;
+		cout << "rm: 无法删除\"" << name << "\": 没有那个文件或目录" << endl;
 	}
 }
 
@@ -683,6 +720,12 @@ void SetTitle(const char* Title)
 
 // 通过路径获取Inode
 inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
+	/*
+		函数有几种返回结果
+		1. 路径中的任意一环不存在，则返回NULL，并且全局变量NowPathName不变
+		2. 路径存在，最后一个路径是文件夹，则返回其inode，全局变量NowPathName作相应的更改
+		3. 路径存在，最后一个路径是文件，则返回其inode，但全局变量NowPathName不变
+	*/
 	inode* targetPath;
 	char nowPathName[MAXPATH_LEN];
 	// 备份当前路径
@@ -750,6 +793,13 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 					}
 				}
 				break; // 找到路径退出当前文件夹的遍历
+			}
+			// 若为最后一个路径，需要判断是不是文件，如果是，inode保留为其上级目录的inode
+			if (p == pathNum - 1 && strcmp(path[p], folder->name[q]) == 0 && strcmp(Inode[folder->index[q]].ExtensionName, "folder") != 0) {
+				targetPath = &Inode[folder->index[q]];
+				memcpy(NowPathName, nowPathName, strlen(nowPathName) + 1);
+				haveSuchAPath = true;
+				break;
 			}
 		}
 		if (!haveSuchAPath) {

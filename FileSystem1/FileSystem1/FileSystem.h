@@ -178,7 +178,7 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath);
 void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock);
 TextBlock* LoadTextBlockFromDisk(Disk& disk, int index);
 void NewTxt(inode* FolderInode);
-void ShowText(char* name, inode* nowpath);
+void ShowText(char *pathName, inode* nowpath);
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
 void LS(inode* Inode);
 void CD(char* name, inode** nowpath);

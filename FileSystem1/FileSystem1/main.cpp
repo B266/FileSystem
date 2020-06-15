@@ -37,7 +37,7 @@ int main()
 
 		if (strcmp(command, "cd") == 0)
 		{
-			char name[20];
+			char name[MAXPATH_LEN];
 			cin >> name;
 			CD(name,&NowPath);
 
@@ -52,10 +52,10 @@ int main()
 		}
 		else if (strcmp(command, "open") == 0)
 		{
-			char name[20];
+			char name[MAXPATH_LEN];
 			cin >> name;
 
-			ShowText(name,NowPath);
+			ShowText(name, NowPath);
 		}
 		else if (strcmp(command, "save") == 0)
 		{
