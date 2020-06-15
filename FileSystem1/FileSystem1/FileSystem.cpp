@@ -1,6 +1,8 @@
 
 #include"FileSystem.h"
 
+
+using namespace std;
 superblock SuperBlock;
 Disk disk;
 inode Inode[InodeSum];
@@ -940,5 +942,18 @@ bool Chmod(inode* Inode,int permission)
 	}
 	return false;
 		
+
+}
+
+int complier(char* filename,inode* NowPath,Disk&disk)
+{
+	inode* FileInode = getInodeByPathName(filename,NowPath);
+	if (FileInode != NULL)
+	{
+		File* file = OpenFile(disk, FileInode);
+		char name[NameLen + 1 + NameLen];
+		sprintf(name, "%s.%s", FileInode->Name, FileInode->ExtensionName);
+		complier(file->data, name);
+	}
 
 }

@@ -1,5 +1,7 @@
 
 #include"FileSystem.h"
+
+using namespace std;
 HANDLE CommandLineHandle;
 
 
@@ -90,6 +92,12 @@ int main()
 			cin >> permission;
 			
 			Chmod(path,  permission, NowPath);
+		}
+		else if (strcmp(command, "complier") == 0)
+		{
+			char filename[MAXPATH_LEN];
+			cin >> filename;
+			complier(filename, NowPath, disk);
 		}
 		else
 		{
