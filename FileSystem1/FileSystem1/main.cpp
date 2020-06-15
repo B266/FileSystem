@@ -74,7 +74,7 @@ int main()
 
 		}
 		else if (strcmp(command, "rm") == 0) {
-			char name[20];
+			char name[MAXPATH_LEN];
 			cin >> name;
 			RM(disk, NowPath, name, false);
 		}
