@@ -139,11 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cminicomplier.cpp" />
     <ClCompile Include="Format.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="FileSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cminicomplier.h" />
     <ClInclude Include="FileSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
