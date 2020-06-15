@@ -523,7 +523,6 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 
 		fileInode->DataBlockIndex1 = dataBlockIndex1FileIndex;
 	}
-
 	DataBlockIndexFile dataBlockIndexFile1;
 	DataBlockIndexFile dataBlockIndexFile2;
 
@@ -538,7 +537,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 				{
 					indexBlock = GetOneBlock(disk);
 					TextBlock textBlock;
-					::memcpy(textBlock.data, &data[138+128*i+j], dataOneBlock);
+					::memcpy(textBlock.data, &data[138 + 128 * i + j], dataOneBlock);
 					textBlock.inodeindex = fileInode->inodeId;
 					dataBlockIndexFile1.index[j] = indexBlock;
 					SaveTextBlockToDisk(disk, indexBlock, textBlock);
@@ -546,7 +545,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 				int dataBlockIndexFileIndex = GetOneBlock(disk);//二级间接块指向的目录块
 				SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
 				dataBlockIndexFile2.index[i] = dataBlockIndexFileIndex;
-			} 
+			}
 			int t = (blockSize - 138) / 128;
 			for (int j = 0; j < (blockSize - 138) % 128; j++)
 			{
@@ -580,6 +579,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile2, disk, dataBlockIndex2FileIndex);
 		}
 	}
+	
 }
 
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
