@@ -431,11 +431,11 @@ void ShowText(char *pathName, inode* nowpath)
 	// 计算目标路径的inode
 	inode* targetpath = getInodeByPathName(pathName, path);
 	// 若当前inode为文件，则为fileinode赋值
-	if (strcmp(targetpath->ExtensionName, "folder") != 0) {
+	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0) {
 		fileinode = targetpath;
 	}
 	// 若不是文件，则恢复路径
-	else {
+	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0 ){
 		memcpy(NowPathName, nowPathName_backup, strlen(nowPathName_backup) + 1);
 		cout << "该路径不是文件，无法打开" << endl;
 	}
@@ -656,11 +656,54 @@ void CD(char* name, inode** nowpath)
 	inode** path = nowpath; // 备份nowpath
 	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
 
-	// 查看当前inode是否为文件夹，若是则更改nowpath
-	if (strcmp(targetpath->ExtensionName, "folder") == 0) {
+	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
+	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
 		*nowpath = targetpath;
+		char path[10][20]; // 最多10层路径
+		int i = 0, pathNum = 0, k = 0;
+		// 切割路径
+		while (*(name + i) != '\0') {
+			// 若不是路径分割符
+			if (*(name + i) != '/') {
+				path[pathNum][k] = *(name + i);
+				k++;
+			}
+			// 若为路径分割符则准备填写下一个路径
+			if (*(name + i) == '/' && i != 0) {
+				path[pathNum][k] = '\0';
+				k = 0;
+				pathNum++;
+			}
+			i++;
+		}
+		// 最后一个字符若不是分割符则路径数量加1
+		if (*(name + i - 1) != '/') {
+			path[pathNum][k] = '\0';
+			pathNum++;
+		}
+		for (int p = 0; p < pathNum; p++) {
+			char n[20] = "/";
+			char n1[20] = "..";
+			char n2[20] = ".";
+			if (strcmp(path[p], n1) == 0)
+			{
+				CutPath(NowPathName);
+			}
+			else if (strcmp(path[p], n2) == 0)
+			{
+
+			}
+			else
+			{
+				memcpy(NowPathName + strlen(NowPathName), path[p], sizeof(path[p]));
+				if (strcmp(NowPathName, n) != 0 || strlen(NowPathName) != 1)
+				{
+					memcpy(NowPathName + strlen(NowPathName), &n, sizeof(n));
+				}
+			}
+		}
 	}
-	else {
+	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0){
 		cout << "该路径为文件路径，无法进入" << endl;
 	}
 
@@ -774,6 +817,11 @@ void SetTitle(const char* Title)
 
 // 通过路径获取Inode
 inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
+	/*
+		函数有几种返回结果
+		1. 路径中的任意一环不存在，则返回NULL
+		2. 路径存在，最后一个路径是文件夹，则返回其inode
+	*/
 	inode* targetPath;
 	char nowPathName[MAXPATH_LEN];
 	// 备份当前路径
@@ -818,44 +866,42 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 		Folder* folder = loadFolderFromDisk(disk, targetPath->DataBlockIndex0[0]);
 		bool haveSuchAPath = false;
 		for (int q = 0; q < folder->itemSum; q++) {
-			if (strcmp(path[p], folder->name[q]) == 0 && strcmp(Inode[folder->index[q]].ExtensionName, "folder") == 0) {
+			if (strcmp(path[p], folder->name[q]) == 0) {
 				targetPath = &Inode[folder->index[q]];
 				haveSuchAPath = true;
-				char n[20] = "/";
-				char n1[20] = "..";
-				char n2[20] = ".";
-				if (strcmp(folder->name[q], n1) == 0)
-				{
-					CutPath(NowPathName);
-				}
-				else if (strcmp(folder->name[q], n2) == 0)
-				{
-
-				}
-				else
-				{
-					memcpy(NowPathName + strlen(NowPathName), folder->name[q], sizeof(folder->name[q]));
-					if (strcmp(NowPathName, n) != 0 || strlen(NowPathName) != 1)
-					{
-						memcpy(NowPathName + strlen(NowPathName), &n, sizeof(n));
-					}
-				}
 				break; // 找到路径退出当前文件夹的遍历
 			}
-			// 若为最后一个路径，需要判断是不是文件，如果是，inode保留为其上级目录的inode
-			if (p == pathNum - 1 && strcmp(path[p], folder->name[q]) == 0 && strcmp(Inode[folder->index[q]].ExtensionName, "folder") != 0) {
-				targetPath = &Inode[folder->index[q]];
-				memcpy(NowPathName, nowPathName, strlen(nowPathName) + 1);
-				haveSuchAPath = true;
-				break;
-			}
+
 		}
 		if (!haveSuchAPath) {
-			memcpy(NowPathName, nowPathName, strlen(nowPathName) + 1);
 			cout << "没有'" << path[p] << "'那个路径" << endl;
-			return nowPath;
+			return NULL;
 		}
 	}
 	
 	return targetPath;
+}
+
+bool Chmod(char* pathname, int permission,inode*nowpath)
+{
+	inode* Inode = getInodeByPathName(pathname, nowpath);
+	if (Inode != NULL)
+	{
+		return Chmod(Inode, permission);
+		
+	}
+	return false;
+
+}
+
+bool Chmod(inode* Inode,int permission)
+{
+	if (Inode != NULL)
+	{
+		Inode->permissions = permission;
+		return true;
+	}
+	return false;
+		
+
 }

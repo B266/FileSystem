@@ -8,7 +8,7 @@ int main()
 {
 	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetTitle("FileSystem");
-	Sleep(300);
+	Sleep(500);
 	HWND hw = FindWindow(L"ConsoleWindowClass", L"FileSystem");
 	SetLayeredWindowAttributes(hw, NULL, (230 * 100) / 100, LWA_ALPHA);
 	
@@ -42,30 +42,30 @@ int main()
 			CD(name,&NowPath);
 
 		}
-		if (strcmp(command, "ls") == 0)
+		else if (strcmp(command, "ls") == 0)
 		{
 			LS(NowPath);
 		}
-		if (strcmp(command, "new") == 0)
+		else if (strcmp(command, "new") == 0)
 		{
 			NewTxt(NowPath);
 		}
-		if (strcmp(command, "open") == 0)
+		else if (strcmp(command, "open") == 0)
 		{
 			char name[MAXPATH_LEN];
 			cin >> name;
 
 			ShowText(name, NowPath);
 		}
-		if (strcmp(command, "save") == 0)
+		else if (strcmp(command, "save") == 0)
 		{
 			SaveDisk();
 		}
-		if (strcmp(command, "load") == 0)
+		else if (strcmp(command, "load") == 0)
 		{
 			LoadDisk();
 		}
-		if (strcmp(command, "mkdir") == 0)
+		else if (strcmp(command, "mkdir") == 0)
 		{
 
 			char name[20];
@@ -73,14 +73,27 @@ int main()
 			NewFolder(disk, NowPath, name);
 
 		}
-		if (strcmp(command, "rm") == 0) {
+		else if (strcmp(command, "rm") == 0) {
 			char name[20];
 			cin >> name;
 			RM(disk, NowPath, name, false);
 		}
-		if (strcmp(command, "exit") == 0)
+		else if (strcmp(command, "exit") == 0)
 		{
-			exit(0);
+			return 0;
+		}
+		else if (strcmp(command, "chmod") == 0)
+		{
+			char path[MAXPATH_LEN];
+			cin >> path;
+			int permission;
+			cin >> permission;
+			
+			Chmod(path,  permission, NowPath);
+		}
+		else
+		{
+			cout << endl;
 		}
 	}
 
