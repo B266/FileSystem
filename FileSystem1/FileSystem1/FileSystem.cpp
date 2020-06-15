@@ -755,9 +755,26 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 		if (!haveSuchAPath) {
 			memcpy(NowPathName, nowPathName, strlen(nowPathName) + 1);
 			cout << "没有'" << path[p] << "'那个路径" << endl;
-			return nowPath;
+			return NULL;
 		}
 	}
 	
 	return targetPath;
+}
+
+void Chomd(char* pathname, int permission,inode*nowpath)
+{
+	inode* Inode = getInodeByPathName(pathname, nowpath);
+	if (Inode != NULL)
+	{
+		Chmod(Inode, permission);
+	}
+
+}
+
+void Chmod(inode* Inode,int permission)
+{
+	if(Inode!=NULL)
+		Inode->permissions = permission;
+
 }
