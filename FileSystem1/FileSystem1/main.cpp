@@ -80,7 +80,7 @@ int main()
 		}
 		else if (strcmp(command, "exit") == 0)
 		{
-			exit(0);
+			return 0;
 		}
 		else if (strcmp(command, "chmod") == 0)
 		{
