@@ -1,1 +1,1 @@
-int complier(char* data, char* filename);
+char* complier(char* data, int datasize, char* filename);

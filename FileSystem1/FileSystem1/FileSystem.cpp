@@ -393,11 +393,11 @@ void NewTxt(inode* FolderInode)
 	strcpy_s(Inode[indexInode].Name, name);
 	getchar();
 	getchar();
-	const int maxsize = 1024*1024;
+	const int maxsize = 99999;
 
 	//写入自己的datablock
-	char* text = NULL;
-	text = (char*)malloc(512 * sizeof(char));
+	char text[maxsize] = { 0 };
+	
 	cout << "data:";
 
 	while (1)
@@ -922,13 +922,26 @@ bool Chmod(inode* Inode,int permission)
 
 int complier(char* filename,inode* NowPath,Disk&disk)
 {
-	inode* FileInode = getInodeByPathName(filename,NowPath);
+	inode* FileInode = getInodeByPathName(filename,NowPath,1);
+	inode*folderInode= getInodeByPathName(filename, NowPath,2);
 	if (FileInode != NULL)
 	{
 		File* file = OpenFile(disk, FileInode);
 		char name[NameLen + 1 + NameLen];
-		sprintf(name, "%s.%s", FileInode->Name, FileInode->ExtensionName);
-		complier(file->data, name);
-	}
+		sprintf_s(name, "%s.%s", FileInode->Name, FileInode->ExtensionName);
 
+		char *Code=complier(file->data,FileInode->size, name);
+		
+		File CodeFile;
+		CodeFile.data = Code;
+		CodeFile.dataSize = strlen(Code);
+		inode *CodeInode = &Inode[GetAInode()];
+		CodeFile.fileInode = CodeInode;
+		strcpy_s(CodeInode->Name, "temp");
+		strcpy_s(CodeInode->ExtensionName, "tm");
+		SaveFileData(disk, CodeInode, Code, CodeFile.dataSize);
+		
+		AddItemInFolder(folderInode, CodeInode->Name, CodeInode->inodeId);
+	}
+	return 0;
 }

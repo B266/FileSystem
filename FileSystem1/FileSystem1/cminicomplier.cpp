@@ -3326,11 +3326,22 @@ void printTree(TreeNode* tree)
 
 
 
-int complier(char * data,char *filename)
+char* complier(char * data,int datasize,char *filename)
 {
 	TreeNode* syntaxTree;
 
-	source->_Placeholder=data;
+	char* buf =(char*) malloc(sizeof(char) * datasize+1);
+	memcpy(buf, data, datasize+1);
+	buf[datasize] = 0;
+	source = NULL;
+	source = fopen("tmp.txt", "w+");
+	fputs(buf, source);
+	fclose(source);
+
+	source = fopen("tmp.txt", "r");
+
+
+	listing = stdout;
 
 
 	fprintf(listing, "\nTINY COMPILATION: %s\n", filename);
@@ -3351,12 +3362,13 @@ int complier(char * data,char *filename)
 		typeCheck(syntaxTree);
 		if (TraceAnalyze) fprintf(listing, "\nType Checking Finished\n");
 	}
-
+	
 
 #if !NO_CODE
+	char* codefile=NULL;
 	if (!Error)
 	{
-		char* codefile;
+		
 		int fnlen = strcspn(filename, ".");
 
 		codefile = (char*)calloc(fnlen + 4, sizeof(char));
@@ -3377,7 +3389,24 @@ int complier(char * data,char *filename)
 #endif
 #endif
 	fclose(source);
-	return 0;
+
+
+	//读取全部数据到新的File
+	code = fopen(codefile, "r");
+	if (code == NULL)
+	{
+		return NULL;
+	}
+	fseek(code, 0, SEEK_END);
+	int length = ftell(code);
+	char* codeData = (char*)malloc((length + 1) * sizeof(char));
+	rewind(code);
+	length = fread(codeData, 1, length, code);
+	codeData[length] = '\0';
+	fclose(code);
+	return codeData;
+	
+
 }
 
 
