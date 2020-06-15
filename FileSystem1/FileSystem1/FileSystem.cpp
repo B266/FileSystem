@@ -602,11 +602,11 @@ void CD(char* name, inode** nowpath)
 	inode** path = nowpath; // 备份nowpath
 	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
 
-	// 查看当前inode是否为文件夹，若是则更改nowpath
-	if (strcmp(targetpath->ExtensionName, "folder") == 0) {
+	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
+	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
 		*nowpath = targetpath;
 	}
-	else {
+	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0){
 		cout << "该路径为文件路径，无法进入" << endl;
 	}
 
@@ -720,6 +720,12 @@ void SetTitle(const char* Title)
 
 // 通过路径获取Inode
 inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
+	/*
+		函数有几种返回结果
+		1. 路径中的任意一环不存在，则返回NULL，并且全局变量NowPathName不变
+		2. 路径存在，最后一个路径是文件夹，则返回其inode，全局变量NowPathName作相应的更改
+		3. 路径存在，最后一个路径是文件，则返回其inode，但全局变量NowPathName不变
+	*/
 	inode* targetPath;
 	char nowPathName[MAXPATH_LEN];
 	// 备份当前路径
@@ -799,7 +805,7 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath) {
 		if (!haveSuchAPath) {
 			memcpy(NowPathName, nowPathName, strlen(nowPathName) + 1);
 			cout << "没有'" << path[p] << "'那个路径" << endl;
-			return nowPath;
+			return NULL;
 		}
 	}
 	
