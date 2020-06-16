@@ -6,6 +6,7 @@
 #include <iostream>
 #include <windows.h>
 #include<wchar.h>
+
 #include"cminicomplier.h"
 
 
@@ -183,10 +184,20 @@ void NewTxt(inode* FolderInode);
 void ShowText(char *pathName, inode* nowpath);
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
 void LS(inode* Inode);
+void LS(char* folderPathName);
 void CD(char* name, inode** nowpath);
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // 删除文件
 bool Chmod(inode* Inode, int permission);
 bool Chmod(char* pathname, int permission, inode* nowpath);
+
+//Export 本硬盘内的文件 windows内的文件
+bool Export(char* pathnameInWindows, char* filepathname);
+
+//Import  windows内的文件
+bool Import(char* pathnameInWindows, inode* NowPath);
+
+
+
 int complier(char* filename, inode* NowPath, Disk& disk);
 void MV(inode* NowPath, char* filePath, char* targetPath);
 void CP(inode* NowPath, char* filePath, char* targetPath);
@@ -197,5 +208,7 @@ void SetTitle(const char* Title);
 void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3);
 
 
+// 获取字符串的文件名和扩展名
+void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName);
 
 #endif

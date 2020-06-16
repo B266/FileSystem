@@ -3324,10 +3324,49 @@ void printTree(TreeNode* tree)
 
 //-----------------------------------------util.cpp------------------------------------------
 
+void initComplier()
+{
+	lineno = 0;
+	location = 0;
+	globalOffset = 0;
+	frameoffset = initFO;
+
+	/* numOfParams is the number of parameters in current frame */
+	numOfParams = 0;
+
+	/* isInFunc is the flag that shows if current node
+	 * is in a function block. This flag is used when
+	 * calculating localOffset of a function declaration.
+	 */
+	isInFunc = FALSE;
+
+	/* mainFuncLoc is the location of main() function */
+	mainFuncLoc = 0;
+
+	/*TM location number for current instruction emission*/
+	emitLoc = 0;
+
+	/*Highest TM location emitted so far
+	 *For use in conjunction with emitSkip,
+	 *emitBackup,and emitRestore
+	 */
+	highEmitLoc = 0;
+
+	linepos = 0;//current psition in LineBuf
+	bufsize = 0;//current size of buffer string
+
+	nScope = 0;
+
+	nScopeStack = 0;
+
+	indentno = 0;
+}
+
 
 
 char* complier(char * data,int datasize,char *filename)
 {
+	initComplier();
 	TreeNode* syntaxTree;
 
 	char* buf =(char*) malloc(sizeof(char) * datasize+1);

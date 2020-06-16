@@ -28,7 +28,6 @@ int main()
 	//cout << "inode: " << sizeof(inode) << endl;
 
 
-	
 
 	while (1)
 	{
@@ -48,7 +47,14 @@ int main()
 		}
 		else if (strcmp(Arr1, "ls") == 0)
 		{
-			LS(NowPath);
+			if (strlen(Arr2) > 0)
+			{
+				LS(Arr2);
+			}
+			else {
+				LS(NowPath);
+			}
+			
 		}
 		else if (strcmp(Arr1, "new") == 0)
 		{
@@ -90,11 +96,22 @@ int main()
 		{
 			complier(Arr2, NowPath, disk);
 		}
-		else if (strcmp(Arr1, "mv") == 0) {
-			MV(NowPath, Arr2, Arr3);
+		else if (strcmp(Arr1, "export") == 0)
+		{
+			Export(Arr2, Arr3);
 		}
-		else if (strcmp(Arr1, "cp") == 0) {
-			CP(NowPath, Arr2, Arr3);
+		else if (strcmp(Arr1, "import") == 0)
+		{
+			if (strlen(Arr2) > 0)
+			{
+				Import(Arr2, NowPath);
+			}
+			else {
+				cout << "请拖拽文件到本窗口";
+				char Path[MAXPATH_LEN] = { 0 };
+				cin >> Path;
+				Import(Path, NowPath);
+			}
 		}
 
 	}

@@ -385,6 +385,7 @@ void NewTxt(inode* FolderInode)
 
 
 	strcpy_s(Inode[indexInode].Name, name);
+	strcpy_s(Inode[indexInode].ExtensionName, "txt");
 	getchar();
 	getchar();
 	const int maxsize = 99999;
@@ -419,7 +420,7 @@ void NewTxt(inode* FolderInode)
 
 void ShowText(char *pathName, inode* nowpath)
 {
-	inode* fileinode = NULL;
+	inode* fileinode=NULL;
 	inode* path = nowpath; // 保存原路径不变
 	char nowPathName_backup[MAXPATH_LEN];
 	// 备份路径
@@ -433,14 +434,14 @@ void ShowText(char *pathName, inode* nowpath)
 	// 若不是文件，则恢复路径
 	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0 ){
 		memcpy(NowPathName, nowPathName_backup, strlen(nowPathName_backup) + 1);
-		cout << "open: 该路径不是文件，无法打开" << endl;
+		cout << "该路径不是文件，无法打开" << endl;
 	}
-	else if (targetpath == NULL) {
-		cout << "open: " << pathName << ": 没有那个文件或目录" << endl;
+
+
+	if (fileinode == NULL)
+	{
 		return;
 	}
-
-
 	File* openFile = OpenFile(disk,fileinode);
 	
 	cout << "filename:" << fileinode->Name << endl;
@@ -476,6 +477,29 @@ File* OpenFile(Disk &disk, inode* fileInode)
 			::memcpy(newFile->data + i * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
 			
 		}
+	}
+	if (fileDataBlockSum > 138)
+	{
+		DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, fileInode->DataBlockIndex2);
+		DataBlockIndexFile dataBlockIndexFile2s;
+		for (int i = 0; i < (fileDataBlockSum - 138) / 128 - 1; i++)
+		{
+			dataBlockIndexFile2s = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile2.index[i]);
+			for (int j = 0; j < 128; j++)
+			{
+				TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile2s.index[j]);
+				::memcpy(newFile->data + (138 + i * 128 + j) * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+			}
+		}
+
+		int t = (fileDataBlockSum - 138) / 128;
+		dataBlockIndexFile2s = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile2.index[t]);
+		for (int i = 0; i < (fileDataBlockSum - 138) % 128; i++)
+		{
+			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile2s.index[i]);
+			::memcpy(newFile->data + (138 + t * 128 + i) * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+		}
+
 	}
 	return newFile;
 
@@ -607,11 +631,6 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 			path[pathNum][k] = '\0';
 			pathNum++;
 		}
-		inode* haveThatFolder = getInodeByPathName(path[pathNum - 1], targetInode);
-		if (haveThatFolder != NULL) {
-			cout << "mkdir: 无法创建目录 \"" << folderName << "\": 文件已存在" << endl;
-			return;
-		}
 		::memcpy(folderName, path[pathNum - 1], strlen(path[pathNum - 1]) + 1);
 	}
 	else {
@@ -637,6 +656,15 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 
 }
 
+void LS(char* folderPathName)
+{
+	inode* nowFolderInode = getInodeByPathName(folderPathName);
+	if (strcpy_s(nowFolderInode->ExtensionName, "folder") == 0)
+	{
+		LS(nowFolderInode);
+	}
+}
+
 void LS(inode* FolderInode)
 {
 	Folder* folder = loadFolderFromDisk(disk, FolderInode->DataBlockIndex0[0]);
@@ -652,7 +680,7 @@ void LS(inode* FolderInode)
 		}
 		else
 		{
-			cout << folder->name[i] << "\t";
+			cout << folder->name[i]<<"."<<Inode[folder->index[i]].ExtensionName << "\t";
 		}
 
 	}
@@ -739,9 +767,6 @@ void CD(char* name, inode** nowpath)
 	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0){
 		cout << "该路径为文件路径，无法进入" << endl;
 	}
-	else if (targetpath == NULL) {
-		cout << "cd: " << name << ": 没有那个文件或目录" << endl;
-	}
 
 }
 
@@ -761,7 +786,7 @@ void DeleteItemInFolder(inode* folderInode, inode* fileInode) {
 		folder->index[i] = folder->index[i + 1];
 	}
 	// 清除掉最后一个多余的文件，置空
-	strcpy_s(folder->name[folder->itemSum - 1], "");
+	::memcpy(folder->name[folder->itemSum - 1], 0, sizeof(folder->name[folder->itemSum - 1]));
 	folder->index[folder->itemSum - 1] = NULL;
 	// 文件夹内的文件总数量减一
 	folder->itemSum--;
@@ -778,7 +803,6 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	if (!isSonFolder) {
 		path = getInodeByPathName(name, folderInode);
 		if (path == NULL) {
-			cout << "rm: 无法删除\"" << name << "\": 没有那个文件或目录" << endl;
 			return;
 		}
 	}
@@ -936,7 +960,7 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 
 		}
 		if (!haveSuchAPath) {
-			//cout << "没有\"" << path[p] << "\"那个路径" << endl;
+			cout << "没有\"" << path[p] << "\"那个路径" << endl;
 			return NULL;
 		}
 		// 若在最后一个路径之前出现普通文件，输出错误信息
@@ -976,6 +1000,7 @@ bool Chmod(inode* Inode,int permission)
 		
 
 }
+
 
 int complier(char* filename,inode* NowPath,Disk&disk)
 {
@@ -1053,102 +1078,107 @@ void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
 
 }
 
-void MV(inode* NowPath, char* fileName, char* targetName) {
-	inode* filePath = getInodeByPathName(fileName, NowPath);
-	inode* fileLastPath = getInodeByPathName(fileName, NowPath, 2);
-	inode* targetPath = getInodeByPathName(targetName, NowPath);
-	//inode* targetLastPath = getInodeByPathName(targetName, NowPath, 2);
+
+//向windows导出文件
+bool Export(char* pathname, inode* FileInde)
+{
+	ofstream out;
+	out.open(pathname, ios::out | ios::binary);
+	File *saveFile = OpenFile(disk, FileInde);
+	out.write(saveFile->data, sizeof(char) * saveFile->dataSize);
+	out.close();
+	return true;
+}
+
+//向windows导出文件
+//Export 本硬盘内的文件 windows内的文件
+bool Export(char* filepathname, char* pathnameInWindows)
+{
+	inode* FileInode = getInodeByPathName(filepathname);
+	return Export(pathnameInWindows, FileInode);
+}
+
+/*
+ 获取字符串的文件名和扩展名
+ 使用样例
+		char name[MAXPATH_LEN*2+1];
+		char FileName[MAXPATH_LEN];
+		char ExtensionName[MAXPATH_LEN];
+		cin >> name;
+
+		GetFileNameAndExtensionName(name, FileName, ExtensionName);
+		cout << FileName << " " << ExtensionName << endl;
+
+*/
+void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName)
+{
+	int pointPos = -1;
+	int LastFolderPos = -1;
+	for (int i = 0; i < strlen(AllName); i++)
+	{
+		if (AllName[i] == '.')
+		{
+			pointPos = i;
+		}
+		if (AllName[i] == '/'|| AllName[i]==92)
+		{
+			LastFolderPos = i;
+		}
+	}
+	memset(FileName, 0, strlen(FileName));
+	memset(ExtensionName, 0, strlen(ExtensionName));
+	//如果找到扩展名
+	if (pointPos != -1)
+	{
+		memcpy(FileName, AllName + LastFolderPos + 1, sizeof(char) * (pointPos - LastFolderPos-1));
+		memcpy(ExtensionName, &AllName[pointPos + 1], sizeof(char) * (strlen(AllName) - pointPos));
+	}
+	else
+	{
+		memcpy(FileName, AllName + LastFolderPos + 1, sizeof(char) * (strlen(AllName) - LastFolderPos));
+		memcpy(ExtensionName, "folder", sizeof("folder"));
+	}
+
+
 	
-	if (filePath == NULL || targetPath == NULL) {
-		cout << "mv: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 没有那个文件或目录" << endl;
-		return;
-	}
-	if (strcmp(targetPath->ExtensionName, "folder") != 0) {
-		cout << "mv: \"" << targetName << "\" 应该为目录" << endl;
-		return;
-	}
-	// 移动
-	char path[10][20]; // 最多10层路径
-	int i = 0, pathNum = 0, k = 0;
-	// 切割路径
-	while (*(fileName + i) != '\0') {
-		// 若不是路径分割符
-		if (*(fileName + i) != '/') {
-			path[pathNum][k] = *(fileName + i);
-			k++;
-		}
-		// 若为路径分割符则准备填写下一个路径
-		if (*(fileName + i) == '/' && i != 0) {
-			path[pathNum][k] = '\0';
-			k = 0;
-			pathNum++;
-		}
-		i++;
-	}
-	// 最后一个字符若不是分割符则路径数量加1
-	if (*(fileName + i - 1) != '/') {
-		path[pathNum][k] = '\0';
-		pathNum++;
-	}
-	// 查看是否有同名文件
-	inode* haveThatFolder = getInodeByPathName(path[pathNum - 1], targetPath);
-	if (haveThatFolder != NULL) {
-		cout << "mv: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 有同名文件已存在" << endl;
-		return;
-	}
-	//修改上级目录
-	AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
-	DeleteItemInFolder(fileLastPath, filePath);
-
 }
 
-void CP(inode* NowPath, char* fileName, char* targetName) {
-	inode* filePath = getInodeByPathName(fileName, NowPath);
-	inode* fileLastPath = getInodeByPathName(fileName, NowPath, 2);
-	inode* targetPath = getInodeByPathName(targetName, NowPath);
-	//inode* targetLastPath = getInodeByPathName(targetName, NowPath, 2);
+bool Import(char* pathnameInWindows, inode* folderInode)
+{
+	//读取全部数据到新的File
+	FILE* In =new  FILE;
+	fopen_s(&In, pathnameInWindows, "r");
+	if (In == NULL)
+	{
+		return NULL;
+	}
+	fseek(In, 0, SEEK_END);
+	int length = ftell(In);
+	char* InData = (char*)malloc((length + 1) * sizeof(char));
+	rewind(In);
+	length = fread(InData, 1, length, In);
+	InData[length] = '\0';
+	fclose(In);
 
-	if (filePath == NULL || targetPath == NULL) {
-		cout << "cp: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 没有那个文件或目录" << endl;
-		return;
-	}
-	if (strcmp(targetPath->ExtensionName, "folder") != 0) {
-		cout << "cp: \"" << targetName << "\" 应该为目录" << endl;
-		return;
-	}
-	// 移动
-	char path[10][20]; // 最多10层路径
-	int i = 0, pathNum = 0, k = 0;
-	// 切割路径
-	while (*(fileName + i) != '\0') {
-		// 若不是路径分割符
-		if (*(fileName + i) != '/') {
-			path[pathNum][k] = *(fileName + i);
-			k++;
-		}
-		// 若为路径分割符则准备填写下一个路径
-		if (*(fileName + i) == '/' && i != 0) {
-			path[pathNum][k] = '\0';
-			k = 0;
-			pathNum++;
-		}
-		i++;
-	}
-	// 最后一个字符若不是分割符则路径数量加1
-	if (*(fileName + i - 1) != '/') {
-		path[pathNum][k] = '\0';
-		pathNum++;
-	}
-	// 原路径为文件夹
-	if (strcmp(filePath->ExtensionName, "folder") != 0) {
-		
-	}
-	// 原路径为文件
-	else {
-		
-	}
-	//修改上级目录
-	//AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
-	//DeleteItemInFolder(fileLastPath, filePath);
 
+
+	//新建inode和数据块
+	File newFile;
+
+	
+	int fileInodeIndex = GetAInode();
+
+	char FileNameInWindows[MAXPATH_LEN] = { 0 };
+	char ExtensionNameInWindows[MAXPATH_LEN] = { 0 };
+	GetFileNameAndExtensionName(pathnameInWindows, FileNameInWindows, ExtensionNameInWindows);
+	memcpy(Inode[fileInodeIndex].Name, FileNameInWindows, strlen(FileNameInWindows));
+	memcpy(Inode[fileInodeIndex].ExtensionName, ExtensionNameInWindows, strlen(ExtensionNameInWindows));
+	
+	SaveFileData(disk, &Inode[fileInodeIndex], InData, length);
+
+	AddItemInFolder(folderInode, FileNameInWindows, fileInodeIndex);
+
+	return true;
 }
+
+
