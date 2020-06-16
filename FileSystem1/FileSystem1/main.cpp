@@ -48,7 +48,14 @@ int main()
 		}
 		else if (strcmp(Arr1, "ls") == 0)
 		{
-			LS(NowPath);
+			if (strlen(Arr2) > 0)
+			{
+				LS(Arr2);
+			}
+			else {
+				LS(NowPath);
+			}
+			
 		}
 		else if (strcmp(Arr1, "new") == 0)
 		{
@@ -89,6 +96,10 @@ int main()
 		else if (strcmp(Arr1, "complier") == 0)
 		{
 			complier(Arr2, NowPath, disk);
+		}
+		else if (strcmp(Arr1, "export") == 0)
+		{
+			Export(Arr2, Arr3);
 		}
 
 	}

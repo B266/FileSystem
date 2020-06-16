@@ -6,6 +6,7 @@
 #include <iostream>
 #include <windows.h>
 #include<wchar.h>
+
 #include"cminicomplier.h"
 
 
@@ -174,7 +175,7 @@ Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
 void AddItemInFolder(inode* folderInode, char* name, int inodeIndex);
 void DeleteItemInFolder(inode* folderInode, inode* fileInode); // 更改目录结构，删除一个文件
-inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode);
+inode* getInodeByPathName(const char* folderPathName, inode* nowPath=NowPath, int mode=1);
 
 
 void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock);
@@ -183,10 +184,16 @@ void NewTxt(inode* FolderInode);
 void ShowText(char *pathName, inode* nowpath);
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
 void LS(inode* Inode);
+void LS(char* folderPathName);
 void CD(char* name, inode** nowpath);
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // 删除文件
 bool Chmod(inode* Inode, int permission);
 bool Chmod(char* pathname, int permission, inode* nowpath);
+bool Export(char* pathname, inode* FileInde);
+bool Import(char* pathname, char* filename, inode* folderInode);
+bool Export(char* pathnameInWindows, char* filepathname);
+
+
 int complier(char* filename, inode* NowPath, Disk& disk);
 
 void ShowNowPathInfo();

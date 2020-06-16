@@ -385,6 +385,7 @@ void NewTxt(inode* FolderInode)
 
 
 	strcpy_s(Inode[indexInode].Name, name);
+	strcpy_s(Inode[indexInode].ExtensionName, "txt");
 	getchar();
 	getchar();
 	const int maxsize = 99999;
@@ -604,6 +605,15 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 
 }
 
+void LS(char* folderPathName)
+{
+	inode* nowFolderInode = getInodeByPathName(folderPathName);
+	if (strcpy_s(nowFolderInode->ExtensionName, "folder") == 0)
+	{
+		LS(nowFolderInode);
+	}
+}
+
 void LS(inode* FolderInode)
 {
 	Folder* folder = loadFolderFromDisk(disk, FolderInode->DataBlockIndex0[0]);
@@ -619,7 +629,7 @@ void LS(inode* FolderInode)
 		}
 		else
 		{
-			cout << folder->name[i] << "\t";
+			cout << folder->name[i]<<"."<<Inode[folder->index[i]].ExtensionName << "\t";
 		}
 
 	}
@@ -1012,5 +1022,29 @@ void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
 		memset(Arr3, 0, MAXPATH_LEN);
 		memcpy(Arr3, Arr + indexL[2], (indexR[2] - indexL[2] + 1) * sizeof(char));
 	}
+
+}
+
+
+//向windows导出文件
+bool Export(char* pathname, inode* FileInde)
+{
+	ofstream out;
+	out.open(pathname, ios::out | ios::binary);
+	File *saveFile = OpenFile(disk, FileInde);
+	out.write(saveFile->data, sizeof(char) * saveFile->dataSize);
+	out.close();
+	return true;
+}
+
+//向windows导出文件
+bool Export(char* pathnameInWindows, char* filepathname)
+{
+	inode* FileInode = getInodeByPathName(filepathname);
+	return Export(pathnameInWindows, FileInode);
+}
+
+bool Import(char* pathname, char* filename, inode* folderInode)
+{
 
 }
