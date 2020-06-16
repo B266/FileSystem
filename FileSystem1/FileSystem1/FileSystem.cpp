@@ -419,7 +419,7 @@ void NewTxt(inode* FolderInode)
 
 void ShowText(char *pathName, inode* nowpath)
 {
-	inode* fileinode=NULL;
+	inode* fileinode = NULL;
 	inode* path = nowpath; // 保存原路径不变
 	char nowPathName_backup[MAXPATH_LEN];
 	// 备份路径
@@ -433,14 +433,14 @@ void ShowText(char *pathName, inode* nowpath)
 	// 若不是文件，则恢复路径
 	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0 ){
 		memcpy(NowPathName, nowPathName_backup, strlen(nowPathName_backup) + 1);
-		cout << "该路径不是文件，无法打开" << endl;
+		cout << "open: 该路径不是文件，无法打开" << endl;
 	}
-
-
-	if (fileinode == NULL)
-	{
+	else if (targetpath == NULL) {
+		cout << "open: " << pathName << ": 没有那个文件或目录" << endl;
 		return;
 	}
+
+
 	File* openFile = OpenFile(disk,fileinode);
 	
 	cout << "filename:" << fileinode->Name << endl;
@@ -607,6 +607,11 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 			path[pathNum][k] = '\0';
 			pathNum++;
 		}
+		inode* haveThatFolder = getInodeByPathName(path[pathNum - 1], targetInode);
+		if (haveThatFolder != NULL) {
+			cout << "mkdir: 无法创建目录 \"" << folderName << "\": 文件已存在" << endl;
+			return;
+		}
 		::memcpy(folderName, path[pathNum - 1], strlen(path[pathNum - 1]) + 1);
 	}
 	else {
@@ -734,6 +739,9 @@ void CD(char* name, inode** nowpath)
 	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0){
 		cout << "该路径为文件路径，无法进入" << endl;
 	}
+	else if (targetpath == NULL) {
+		cout << "cd: " << name << ": 没有那个文件或目录" << endl;
+	}
 
 }
 
@@ -753,7 +761,7 @@ void DeleteItemInFolder(inode* folderInode, inode* fileInode) {
 		folder->index[i] = folder->index[i + 1];
 	}
 	// 清除掉最后一个多余的文件，置空
-	::memcpy(folder->name[folder->itemSum - 1], 0, sizeof(folder->name[folder->itemSum - 1]));
+	strcpy_s(folder->name[folder->itemSum - 1], "");
 	folder->index[folder->itemSum - 1] = NULL;
 	// 文件夹内的文件总数量减一
 	folder->itemSum--;
@@ -770,6 +778,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	if (!isSonFolder) {
 		path = getInodeByPathName(name, folderInode);
 		if (path == NULL) {
+			cout << "rm: 无法删除\"" << name << "\": 没有那个文件或目录" << endl;
 			return;
 		}
 	}
@@ -927,7 +936,7 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 
 		}
 		if (!haveSuchAPath) {
-			cout << "没有\"" << path[p] << "\"那个路径" << endl;
+			//cout << "没有\"" << path[p] << "\"那个路径" << endl;
 			return NULL;
 		}
 		// 若在最后一个路径之前出现普通文件，输出错误信息
@@ -1041,5 +1050,105 @@ void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
 		memset(Arr3, 0, MAXPATH_LEN);
 		memcpy(Arr3, Arr + indexL[2], (indexR[2] - indexL[2] + 1) * sizeof(char));
 	}
+
+}
+
+void MV(inode* NowPath, char* fileName, char* targetName) {
+	inode* filePath = getInodeByPathName(fileName, NowPath);
+	inode* fileLastPath = getInodeByPathName(fileName, NowPath, 2);
+	inode* targetPath = getInodeByPathName(targetName, NowPath);
+	//inode* targetLastPath = getInodeByPathName(targetName, NowPath, 2);
+	
+	if (filePath == NULL || targetPath == NULL) {
+		cout << "mv: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 没有那个文件或目录" << endl;
+		return;
+	}
+	if (strcmp(targetPath->ExtensionName, "folder") != 0) {
+		cout << "mv: \"" << targetName << "\" 应该为目录" << endl;
+		return;
+	}
+	// 移动
+	char path[10][20]; // 最多10层路径
+	int i = 0, pathNum = 0, k = 0;
+	// 切割路径
+	while (*(fileName + i) != '\0') {
+		// 若不是路径分割符
+		if (*(fileName + i) != '/') {
+			path[pathNum][k] = *(fileName + i);
+			k++;
+		}
+		// 若为路径分割符则准备填写下一个路径
+		if (*(fileName + i) == '/' && i != 0) {
+			path[pathNum][k] = '\0';
+			k = 0;
+			pathNum++;
+		}
+		i++;
+	}
+	// 最后一个字符若不是分割符则路径数量加1
+	if (*(fileName + i - 1) != '/') {
+		path[pathNum][k] = '\0';
+		pathNum++;
+	}
+	// 查看是否有同名文件
+	inode* haveThatFolder = getInodeByPathName(path[pathNum - 1], targetPath);
+	if (haveThatFolder != NULL) {
+		cout << "mv: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 有同名文件已存在" << endl;
+		return;
+	}
+	//修改上级目录
+	AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
+	DeleteItemInFolder(fileLastPath, filePath);
+
+}
+
+void CP(inode* NowPath, char* fileName, char* targetName) {
+	inode* filePath = getInodeByPathName(fileName, NowPath);
+	inode* fileLastPath = getInodeByPathName(fileName, NowPath, 2);
+	inode* targetPath = getInodeByPathName(targetName, NowPath);
+	//inode* targetLastPath = getInodeByPathName(targetName, NowPath, 2);
+
+	if (filePath == NULL || targetPath == NULL) {
+		cout << "cp: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 没有那个文件或目录" << endl;
+		return;
+	}
+	if (strcmp(targetPath->ExtensionName, "folder") != 0) {
+		cout << "cp: \"" << targetName << "\" 应该为目录" << endl;
+		return;
+	}
+	// 移动
+	char path[10][20]; // 最多10层路径
+	int i = 0, pathNum = 0, k = 0;
+	// 切割路径
+	while (*(fileName + i) != '\0') {
+		// 若不是路径分割符
+		if (*(fileName + i) != '/') {
+			path[pathNum][k] = *(fileName + i);
+			k++;
+		}
+		// 若为路径分割符则准备填写下一个路径
+		if (*(fileName + i) == '/' && i != 0) {
+			path[pathNum][k] = '\0';
+			k = 0;
+			pathNum++;
+		}
+		i++;
+	}
+	// 最后一个字符若不是分割符则路径数量加1
+	if (*(fileName + i - 1) != '/') {
+		path[pathNum][k] = '\0';
+		pathNum++;
+	}
+	// 原路径为文件夹
+	if (strcmp(filePath->ExtensionName, "folder") != 0) {
+		
+	}
+	// 原路径为文件
+	else {
+		
+	}
+	//修改上级目录
+	//AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
+	//DeleteItemInFolder(fileLastPath, filePath);
 
 }

@@ -188,6 +188,8 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // É¾³ýÎÄ
 bool Chmod(inode* Inode, int permission);
 bool Chmod(char* pathname, int permission, inode* nowpath);
 int complier(char* filename, inode* NowPath, Disk& disk);
+void MV(inode* NowPath, char* filePath, char* targetPath);
+void CP(inode* NowPath, char* filePath, char* targetPath);
 
 void ShowNowPathInfo();
 void SetTitle(const char* Title);
