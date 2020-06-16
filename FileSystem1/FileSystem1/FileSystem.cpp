@@ -1067,7 +1067,8 @@ bool Export(char* pathname, inode* FileInde)
 }
 
 //向windows导出文件
-bool Export(char* pathnameInWindows, char* filepathname)
+//Export 本硬盘内的文件 windows内的文件
+bool Export(char* filepathname, char* pathnameInWindows)
 {
 	inode* FileInode = getInodeByPathName(filepathname);
 	return Export(pathnameInWindows, FileInode);
@@ -1118,11 +1119,11 @@ void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionN
 	
 }
 
-bool Import(char* pathname, char* filename, inode* folderInode)
+bool Import(char* pathnameInWindows, inode* folderInode)
 {
 	//读取全部数据到新的File
 	FILE* In =new  FILE;
-	fopen_s(&In, pathname, "r");
+	fopen_s(&In, pathnameInWindows, "r");
 	if (In == NULL)
 	{
 		return NULL;
@@ -1136,13 +1137,30 @@ bool Import(char* pathname, char* filename, inode* folderInode)
 	fclose(In);
 
 
+
 	//新建inode和数据块
-	File* newFile = new File;
-	newFile->data = InData;
-	newFile->dataSize = length;
+	File newFile;
+
 	
 	int fileInodeIndex = GetAInode();
-	newFile->fileInode =&Inode[fileInodeIndex];
-	//newFile->fileInode->Name;
 
+	char FileNameInWindows[MAXPATH_LEN] = { 0 };
+	char ExtensionNameInWindows[MAXPATH_LEN] = { 0 };
+	GetFileNameAndExtensionName(pathnameInWindows, FileNameInWindows, ExtensionNameInWindows);
+	memcpy(Inode[fileInodeIndex].Name, FileNameInWindows, strlen(FileNameInWindows));
+	memcpy(Inode[fileInodeIndex].ExtensionName, ExtensionNameInWindows, strlen(ExtensionNameInWindows));
+	
+	SaveFileData(disk, &Inode[fileInodeIndex], InData, length);
+
+	AddItemInFolder(folderInode, FileNameInWindows, fileInodeIndex);
+
+	return true;
+}
+
+
+//Import 本硬盘内的文件 windows内的文件
+bool Import( char* pathname, char* pathnameInWindows,inode*NowPath)
+{
+	inode* FileInode = getInodeByPathName(pathname,NowPath,2);
+	return Import(pathnameInWindows, FileInode);
 }

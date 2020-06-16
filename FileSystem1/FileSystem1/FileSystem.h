@@ -189,9 +189,13 @@ void CD(char* name, inode** nowpath);
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // 删除文件
 bool Chmod(inode* Inode, int permission);
 bool Chmod(char* pathname, int permission, inode* nowpath);
-bool Export(char* pathname, inode* FileInde);
-bool Import(char* pathname, char* filename, inode* folderInode);
+
+//Export 本硬盘内的文件 windows内的文件
 bool Export(char* pathnameInWindows, char* filepathname);
+
+//Import 本硬盘内的文件 windows内的文件
+bool Import(char* pathname, char* pathnameInWindows, inode* NowPath);
+
 
 
 int complier(char* filename, inode* NowPath, Disk& disk);
