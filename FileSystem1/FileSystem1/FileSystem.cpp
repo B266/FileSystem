@@ -1158,9 +1158,3 @@ bool Import(char* pathnameInWindows, inode* folderInode)
 }
 
 
-//Import 本硬盘内的文件 windows内的文件
-bool Import( char* pathname, char* pathnameInWindows,inode*NowPath)
-{
-	inode* FileInode = getInodeByPathName(pathname,NowPath,2);
-	return Import(pathnameInWindows, FileInode);
-}

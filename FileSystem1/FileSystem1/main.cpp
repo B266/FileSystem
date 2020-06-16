@@ -102,7 +102,7 @@ int main()
 		}
 		else if (strcmp(Arr1, "import") == 0)
 		{
-			Import(Arr2, Arr3,NowPath);
+			Import(Arr2, NowPath);
 		}
 
 	}

@@ -193,8 +193,8 @@ bool Chmod(char* pathname, int permission, inode* nowpath);
 //Export 本硬盘内的文件 windows内的文件
 bool Export(char* pathnameInWindows, char* filepathname);
 
-//Import 本硬盘内的文件 windows内的文件
-bool Import(char* pathname, char* pathnameInWindows, inode* NowPath);
+//Import  windows内的文件
+bool Import(char* pathnameInWindows, inode* NowPath);
 
 
 
