@@ -17,15 +17,24 @@ const int FILE_NAME_LEN = 8;
 const int FILE_EXT_LEN = 8;
 
 const int BlockSize = 512;//块大小, 一块存放512字节
-const int InodeBlockSum = 256;//存放inode的块的数量
 
-const int DataBlockSum = 1024;//数据块的数量
-const int DiskBlockSum = 1 + 1 + InodeBlockSum + DataBlockSum;//虚拟磁盘块总数：1超级快+1位图+256inode块+1024数据块=1282块
 const int InodeSize = 128;//inode大小
-const int DataBlockStart = InodeBlockSum + 2;//1号放超级块，2——257号放inode，258——1282号放数据块
+const int InodeBitMapBlockSum = 50; //存放inode位图的块的数量
+
+const int InodeSum = InodeBitMapBlockSum*512*8;//inode总数
 
 const int InodeSumInOneBlock = BlockSize / InodeSize;//一块中inode数
-const int InodeSum = InodeSumInOneBlock * InodeBlockSum;//inode总数
+const int InodeBlockSum = InodeSum /4;//存放inode的块的数量 
+
+const int DataBlockSum = InodeSum;//数据块的数量
+const int DiskBlockSum = 1 + InodeBitMapBlockSum + InodeBlockSum +1+ DataBlockSum;//虚拟磁盘块总数：超级块+inode位图+inode块+用户块+数据块[第一块为用户数据块]
+
+
+const int InodeBitmapBlockStart = 1;
+const int InodeBlockStart = 1 + InodeBitMapBlockSum;
+const int DataBlockStart = InodeBlockSum + 1+InodeBitMapBlockSum;//1号放超级块，2——257号放inode，258——1282号放数据块
+
+
 
 const int FreeBlockSum = DataBlockSum / 100 + 1;
 const int MaxFreeBlockCount = 100;
@@ -131,7 +140,7 @@ struct User
 	char password[8][PassWordLen] = { 0 };
 };
 
-bool isLogin = false;
+extern bool isLogin;
 bool Login(char* name, char* password);
 bool Logout();
 bool useradd(char* name, char* password, char* pawword2);
@@ -174,6 +183,8 @@ void SaveSuperBlockToDisk(superblock& SuperBlock, Disk& disk);
 void SaveInodeToDisk(bool& bitmap, inode& inodeList, Disk& disk);
 void LoadSuperBlockFromDisk(superblock& SuperBlock, Disk& disk);
 void LoadInodeFromDisk(bool& bitmap, inode& inodeList, Disk& disk);
+User LoadUserFromDisk(Disk& disk);
+void SaveUserToDisk(Disk& disk, User user);
 void SaveDisk();
 void LoadDisk();
 

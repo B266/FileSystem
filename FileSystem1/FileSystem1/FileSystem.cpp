@@ -13,6 +13,8 @@ char NowPathName[MAXPATH_LEN] = "/";
 char NowUser[MAXUSERNAME_LEN] = "root";
 char DeviceName[MAXDEVICENAME_LEN] = "Disk0";
 
+bool isLogin = false;
+
 void ShowNowPathInfo()
 {
 	SetConsoleTextAttribute(CommandLineHandle, FOREGROUND_GREEN);
@@ -246,8 +248,8 @@ void SaveSuperBlockToDisk(superblock& SuperBlock, Disk& disk)
 }
 void SaveInodeToDisk(bool& bitmap, inode& inodeList, Disk& disk)
 {
-	::memcpy(&disk.data[1], &bitmap, sizeof(block));
-	::memcpy(&disk.data[2], &inodeList, sizeof(inode) * InodeSum);
+	::memcpy(&disk.data[InodeBitmapBlockStart], &bitmap,sizeof(block) * InodeBitMapBlockSum);
+	::memcpy( &disk.data[InodeBlockStart], &inodeList, sizeof(inode) * InodeSum);
 
 }
 
@@ -259,8 +261,8 @@ void LoadSuperBlockFromDisk(superblock& SuperBlock, Disk& disk)
 
 void LoadInodeFromDisk(bool& bitmap, inode& inodeList, Disk& disk)
 {
-	::memcpy(&bitmap, &disk.data[1], sizeof(block));
-	::memcpy(&inodeList, &disk.data[2], sizeof(inode) * InodeSum);
+	::memcpy(&bitmap, &disk.data[InodeBitmapBlockStart], sizeof(block)* InodeBitMapBlockSum);
+	::memcpy(&inodeList, &disk.data[InodeBlockStart], sizeof(inode) * InodeSum);
 }
 
 void SaveDisk()
@@ -1291,4 +1293,10 @@ void Format()
 
 	return;
 
+}
+
+
+bool Login(char* name, char* password)
+{
+	return true;
 }
