@@ -12,8 +12,6 @@
 
 
 
-extern FILE* fw;
-extern FILE* fr;
 
 const int FILE_NAME_LEN = 8;
 const int FILE_EXT_LEN = 8;
@@ -45,6 +43,7 @@ struct block
 
 
 const int NameLen = 18;
+const int PassWordLen = 20;
 
 
 
@@ -122,6 +121,21 @@ struct DataBlockIndexFile
 {
 	int index[sizeof(block) / sizeof(int)];
 };
+
+
+//在数据块的第一块存账户块，第一个user为root用户,其他都为普通用户
+struct User
+{
+	int userSum = 0;
+	char name[8][NameLen] = { 0 };
+	char password[8][PassWordLen] = { 0 };
+};
+
+bool isLogin = false;
+bool Login(char* name, char* password);
+bool Logout();
+bool useradd(char* name, char* password, char* pawword2);
+
 
 
 //---------------共享变量----------------------------------------------------------------------------------
@@ -211,4 +225,4 @@ void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3);
 // 获取字符串的文件名和扩展名
 void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName);
 
-#endif
+#endif FILESYSTEM_H

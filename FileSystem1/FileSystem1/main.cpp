@@ -18,6 +18,7 @@ void GetStr()
 
 int main()
 {
+	cout << sizeof(User) << endl;
 	CommandLineHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetTitle("FileSystem");
 	Sleep(500);
