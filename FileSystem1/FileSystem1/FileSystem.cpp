@@ -1197,31 +1197,104 @@ bool Rename(char* filenameandpath, char* name)
 	return true;
 }
 
+void MV(inode* NowPath, char* fileName, char* targetName) {
+	inode* filePath = getInodeByPathName(fileName, NowPath);
+	inode* fileLastPath = getInodeByPathName(fileName, NowPath, 2);
+	inode* targetPath = getInodeByPathName(targetName, NowPath);
+	//inode* targetLastPath = getInodeByPathName(targetName, NowPath, 2);
 
-void Format()
-{
-	//格式化磁盘文件
-	memset(&disk, 0, sizeof(disk));
-	//格式化超级块
-	memset(&SuperBlock, 0, sizeof(superblock));
-	//格式化Inode节点
-	memset(Inode, 0, sizeof(inode) * InodeSum);
-	//格式化位图
-	memset(InodeBitmap, 0, sizeof(InodeBitmap));
-	lastInodePos = 0;
+	if (filePath == NULL || targetPath == NULL) {
+		cout << "mv: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 没有那个文件或目录" << endl;
+		return;
+	}
+	if (strcmp(targetPath->ExtensionName, "folder") != 0) {
+		cout << "mv: \"" << targetName << "\" 应该为目录" << endl;
+		return;
+	}
+	// 移动
+	char path[10][20]; // 最多10层路径
+	int i = 0, pathNum = 0, k = 0;
+	// 切割路径
+	while (*(fileName + i) != '\0') {
+		// 若不是路径分割符
+		if (*(fileName + i) != '/') {
+			path[pathNum][k] = *(fileName + i);
+			k++;
+		}
+		// 若为路径分割符则准备填写下一个路径
+		if (*(fileName + i) == '/' && i != 0) {
+			path[pathNum][k] = '\0';
+			k = 0;
+			pathNum++;
+		}
+		i++;
+	}
+	// 最后一个字符若不是分割符则路径数量加1
+	if (*(fileName + i - 1) != '/') {
+		path[pathNum][k] = '\0';
+		pathNum++;
+	}
+	// 查看是否有同名文件
+	inode* haveThatFolder = getInodeByPathName(path[pathNum - 1], targetPath);
+	if (haveThatFolder != NULL) {
+		cout << "mv: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 有同名文件已存在" << endl;
+		return;
+	}
+	//修改上级目录
+	AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
+	DeleteItemInFolder(fileLastPath, filePath);
 
-	NowPath = &Inode[SuperBlock.firstInode];
-	RootPath = &Inode[SuperBlock.firstInode];
+}
 
-	memcpy(NowPathName, "/", 2);
-	memcpy(NowUser, "root", 5);
-	memcpy(DeviceName, "Disk0", 6);
+void CP(inode* NowPath, char* fileName, char* targetName) {
+	inode* fileInode = getInodeByPathName(fileName, NowPath);
+	inode* fileLastInode = getInodeByPathName(fileName, NowPath, 2);
+	inode* targetInode = getInodeByPathName(targetName, NowPath);
+	//inode* targetLastInode = getInodeByPathName(targetName, NowPath, 2);
 
-	initInode();//初始化inode
-	initGroupLink(disk);//初始化磁盘块区，按成组链法组织
-	InitRootFolder();//初始化目录
+	if (fileInode == NULL || targetInode == NULL) {
+		cout << "cp: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 没有那个文件或目录" << endl;
+		return;
+	}
+	if (strcmp(targetInode->ExtensionName, "folder") != 0) {
+		cout << "cp: \"" << targetName << "\" 应该为目录" << endl;
+		return;
+	}
+	// 移动
+	char path[10][20]; // 最多10层路径
+	int i = 0, pathNum = 0, k = 0;
+	// 切割路径
+	while (*(fileName + i) != '\0') {
+		// 若不是路径分割符
+		if (*(fileName + i) != '/') {
+			path[pathNum][k] = *(fileName + i);
+			k++;
+		}
+		// 若为路径分割符则准备填写下一个路径
+		if (*(fileName + i) == '/' && i != 0) {
+			path[pathNum][k] = '\0';
+			k = 0;
+			pathNum++;
+		}
+		i++;
+	}
+	// 最后一个字符若不是分割符则路径数量加1
+	if (*(fileName + i - 1) != '/') {
+		path[pathNum][k] = '\0';
+		pathNum++;
+	}
+	// 原路径为文件夹
+	if (strcmp(fileInode->ExtensionName, "folder") == 0) {
 
-
-	return;
+	}
+	// 原路径为文件
+	else {
+		File* newFile = OpenFile(disk, fileInode);
+		int indexInode = GetAInode();
+		SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
+		AddItemInFolder(targetInode, path[pathNum - 1], indexInode);
+	}
+	//修改上级目录
+	//AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
 
 }

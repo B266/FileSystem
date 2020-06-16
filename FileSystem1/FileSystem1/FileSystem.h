@@ -199,6 +199,8 @@ void Format();
 
 
 int complier(char* filename, inode* NowPath, Disk& disk);
+void MV(inode* NowPath, char* filePath, char* targetPath);
+void CP(inode* NowPath, char* filePath, char* targetPath);
 
 void ShowNowPathInfo();
 void SetTitle(const char* Title);

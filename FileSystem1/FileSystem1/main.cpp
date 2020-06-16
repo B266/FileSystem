@@ -131,6 +131,13 @@ int main()
 		{
 			Format();
 		}
+		else if (strcmp(Arr1, "mv") == 0) {
+			MV(NowPath, Arr2, Arr3);
+		}
+		else if (strcmp(Arr1, "cp") == 0) {
+			CP(NowPath, Arr2, Arr3);
+		}
+
 	}
 
 	return 0;
