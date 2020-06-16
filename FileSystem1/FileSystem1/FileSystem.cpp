@@ -583,14 +583,42 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 
 	Folder folderBlock;
 
-
+	inode* targetInode = getInodeByPathName(folderName, FatherFolderInode, 2);
+	if (targetInode != NULL) {
+		char path[10][20]; // 最多10层路径
+		int i = 0, pathNum = 0, k = 0;
+		// 切割路径
+		while (*(folderName + i) != '\0') {
+			// 若不是路径分割符
+			if (*(folderName + i) != '/') {
+				path[pathNum][k] = *(folderName + i);
+				k++;
+			}
+			// 若为路径分割符则准备填写下一个路径
+			if (*(folderName + i) == '/' && i != 0) {
+				path[pathNum][k] = '\0';
+				k = 0;
+				pathNum++;
+			}
+			i++;
+		}
+		// 最后一个字符若不是分割符则路径数量加1
+		if (*(folderName + i - 1) != '/') {
+			path[pathNum][k] = '\0';
+			pathNum++;
+		}
+		::memcpy(folderName, path[pathNum - 1], strlen(path[pathNum - 1]) + 1);
+	}
+	else {
+		return;
+	}
 
 	sprintf_s(folderBlock.name[0], "..");
 	sprintf_s(folderBlock.name[1], ".");
 	folderBlock.itemSum = 2;
 	int inodeId = GetAInode();
 
-	folderBlock.index[0] = FatherFolderInode->inodeId;
+	folderBlock.index[0] = targetInode->inodeId;
 	folderBlock.index[1] = inodeId;
 
 	int blockId = GetOneBlock(disk);
@@ -600,7 +628,7 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 	SaveFolderToBlock(disk, blockId, folderBlock);
 
 	//修改上级目录
-	AddItemInFolder(FatherFolderInode, folderName, inodeId);
+	AddItemInFolder(targetInode, folderName, inodeId);
 
 }
 
@@ -679,7 +707,7 @@ void CD(char* name, inode** nowpath)
 		}
 		// 绝对地址
 		if (*name == '/') {
-			memcpy(NowPathName, "/", sizeof("/"));
+			::memcpy(NowPathName, "/", sizeof("/"));
 		}
 		for (int p = 0; p < pathNum; p++) {
 			char n[20] = "/";
@@ -695,10 +723,10 @@ void CD(char* name, inode** nowpath)
 			}
 			else
 			{
-				memcpy(NowPathName + strlen(NowPathName), path[p], sizeof(path[p]));
+				::memcpy(NowPathName + strlen(NowPathName), path[p], sizeof(path[p]));
 				if (strcmp(NowPathName, n) != 0 || strlen(NowPathName) != 1)
 				{
-					memcpy(NowPathName + strlen(NowPathName), &n, sizeof(n));
+					::memcpy(NowPathName + strlen(NowPathName), &n, sizeof(n));
 				}
 			}
 		}
@@ -725,7 +753,7 @@ void DeleteItemInFolder(inode* folderInode, inode* fileInode) {
 		folder->index[i] = folder->index[i + 1];
 	}
 	// 清除掉最后一个多余的文件，置空
-	strcpy_s(folder->name[folder->itemSum - 1], "");
+	::memcpy(folder->name[folder->itemSum - 1], 0, sizeof(folder->name[folder->itemSum - 1]));
 	folder->index[folder->itemSum - 1] = NULL;
 	// 文件夹内的文件总数量减一
 	folder->itemSum--;
