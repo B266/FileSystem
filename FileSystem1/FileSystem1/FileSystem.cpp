@@ -978,6 +978,7 @@ bool Chmod(inode* Inode,int permission)
 
 }
 
+
 int complier(char* filename,inode* NowPath,Disk&disk)
 {
 	inode* FileInode = getInodeByPathName(filename,NowPath,1);
