@@ -4,6 +4,16 @@
 using namespace std;
 HANDLE CommandLineHandle;
 
+void GetStr()
+{
+	char name[MAXPATH_LEN] = { 0 };
+	bool inputflag = false;
+	while (1)
+	{
+		char c=_getch();
+		memcpy(name + strlen(name), &c, sizeof(char));
+	}
+}
 
 
 int main()
@@ -107,11 +117,19 @@ int main()
 				Import(Arr2, NowPath);
 			}
 			else {
-				cout << "请拖拽文件到本窗口";
+				cout << "提示：请拖拽文件到本窗口，并按下回车键\n";
 				char Path[MAXPATH_LEN] = { 0 };
 				cin >> Path;
 				Import(Path, NowPath);
 			}
+		}
+		else if (strcmp(Arr1, "rename") == 0)
+		{
+			Rename(Arr2, Arr3);
+		}
+		else if (strcmp(Arr1, "format") == 0)
+		{
+			Format();
 		}
 		else if (strcmp(Arr1, "mv") == 0) {
 			MV(NowPath, Arr2, Arr3);
@@ -121,7 +139,6 @@ int main()
 		}
 
 	}
-
 
 	return 0;
 }

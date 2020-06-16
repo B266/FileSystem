@@ -6,6 +6,7 @@
 #include <iostream>
 #include <windows.h>
 #include<wchar.h>
+#include<conio.h> //for getch()
 
 #include"cminicomplier.h"
 
@@ -128,7 +129,7 @@ extern superblock SuperBlock;
 extern inode Inode[InodeSum];
 
 extern bool InodeBitmap[InodeSum]; //inode位图，0表示inode节点没被用 1表示inode节点被用 最大支持512*8个inode节点索引
-
+extern int lastInodePos ;
 extern Disk disk;
 
 extern inode* NowPath;//当前目录
@@ -166,7 +167,6 @@ void LoadDisk();
 File* OpenFile(Disk &disk, inode *fileInode);  //读取某个inode的数据
 void SaveFileData(Disk&disk ,inode* fileInode,char *data,int datasize); //保存某个inode的数据
 
-bool Format();
 
 
 
@@ -189,13 +189,13 @@ void CD(char* name, inode** nowpath);
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // 删除文件
 bool Chmod(inode* Inode, int permission);
 bool Chmod(char* pathname, int permission, inode* nowpath);
-
+bool Rename(char* filenameandpath, char* name); //重命名
 //Export 本硬盘内的文件 windows内的文件
 bool Export(char* pathnameInWindows, char* filepathname);
 
 //Import  windows内的文件
 bool Import(char* pathnameInWindows, inode* NowPath);
-
+void Format();
 
 
 int complier(char* filename, inode* NowPath, Disk& disk);

@@ -34,27 +34,27 @@ void initInode()
 		Inode[i].inodeId = i;
 	}
 }
-
+int lastInodePos = 0;
 int GetAInode()
 {
-	static int lastPos = 0;
 
-	for (int i = lastPos; i < InodeSum; i++)
+
+	for (int i = lastInodePos; i < InodeSum; i++)
 	{
 		if (InodeBitmap[i] == 0)
 		{
 			InodeBitmap[i] = 1;
-			lastPos = i;
+			lastInodePos = i;
 			return i;
 
 		}
 	}
-	for (int i = 0; i < lastPos; i++)
+	for (int i = 0; i < lastInodePos; i++)
 	{
 		if (InodeBitmap[i] == 0)
 		{
 			InodeBitmap[i] = 1;
-			lastPos = i;
+			lastInodePos = i;
 			return i;
 
 		}
@@ -321,7 +321,7 @@ Folder* loadFolderFromDisk(Disk& disk, int index)
 //根目录
 void InitRootFolder()
 {
-	strcpy_s(Inode[SuperBlock.firstInode].Name, "root");
+	
 	Inode[SuperBlock.firstInode].DataBlockIndex0[0] = GetOneBlock(disk);
 	SuperBlock.firstInode = GetAInode();
 
@@ -332,6 +332,7 @@ void InitRootFolder()
 	sprintf_s(rootF.name[0], "..");
 	sprintf_s(rootF.name[1], ".");
 	rootF.itemSum = 2;
+	strcpy_s(Inode[SuperBlock.firstInode].Name, "root");
 	strcpy_s(Inode[SuperBlock.firstInode].ExtensionName, "folder");
 	SaveFolderToBlock(disk, Inode[SuperBlock.firstInode].DataBlockIndex0[0], rootF);
 
@@ -1185,6 +1186,20 @@ bool Import(char* pathnameInWindows, inode* folderInode)
 	return true;
 }
 
+bool Rename(char* filenameandpath, char* name)
+{
+	inode* FileInode = getInodeByPathName(filenameandpath, NowPath, 1);
+	if (FileInode == NULL)
+	{
+		return false;
+	}
+	char FileName[NameLen] = { 0 };
+	char ExtensionName[NameLen] = { 0 };
+	GetFileNameAndExtensionName(name, FileName, ExtensionName);
+	memcpy(FileInode->Name, FileName, sizeof(FileName));
+	memcpy(FileInode->ExtensionName, ExtensionName, sizeof(ExtensionName));
+	return true;
+}
 
 void MV(inode* NowPath, char* fileName, char* targetName) {
 	inode* filePath = getInodeByPathName(fileName, NowPath);
@@ -1285,5 +1300,31 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	}
 	//修改上级目录
 	//AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
+
+}
+
+void Format()
+{
+	//格式化磁盘文件
+	memset(&disk, 0, sizeof(disk));
+	//格式化超级块
+	memset(&SuperBlock, 0, sizeof(SuperBlock));
+	//格式化Inode节点
+	memset(Inode, 0, sizeof(Inode));
+	//格式化位图
+	memset(InodeBitmap, 0, sizeof(InodeBitmap));
+	lastInodePos = 0;
+	NowPath = &Inode[SuperBlock.firstInode];
+	RootPath = &Inode[SuperBlock.firstInode];
+
+	memcpy(NowPathName, "/", 2);
+	memcpy(NowUser, "root", 5);
+	memcpy(DeviceName, "Disk0", 6);
+
+	initInode();//初始化inode
+	initGroupLink(disk);//初始化磁盘块区，按成组链法组织
+	InitRootFolder();//初始化目录
+
+	return;
 
 }
