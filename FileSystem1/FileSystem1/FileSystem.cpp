@@ -419,9 +419,9 @@ void NewTxt(inode* FolderInode)
 }
 
 
-void ShowText(char *pathName, inode* nowpath)
+void ShowText(char* pathName, inode* nowpath)
 {
-	inode* fileinode=NULL;
+	inode* fileinode = NULL;
 	inode* path = nowpath; // 保存原路径不变
 	char nowPathName_backup[MAXPATH_LEN];
 	// 备份路径
@@ -433,17 +433,17 @@ void ShowText(char *pathName, inode* nowpath)
 		fileinode = targetpath;
 	}
 	// 若不是文件，则恢复路径
-	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0 ){
+	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
 		memcpy(NowPathName, nowPathName_backup, strlen(nowPathName_backup) + 1);
-		cout << "该路径不是文件，无法打开" << endl;
+		cout << "open: 该路径不是文件，无法打开" << endl;
 	}
-
-
-	if (fileinode == NULL)
-	{
+	else if (targetpath == NULL) {
+		cout << "open: " << pathName << ": 没有那个文件或目录" << endl;
 		return;
 	}
-	File* openFile = OpenFile(disk,fileinode);
+
+
+	File* openFile = OpenFile(disk, fileinode);
 	
 	cout << "filename:" << fileinode->Name << endl;
 	cout << "data:" << endl;
@@ -766,7 +766,10 @@ void CD(char* name, inode** nowpath)
 		}
 	}
 	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0){
-		cout << "该路径为文件路径，无法进入" << endl;
+		cout << "cd: 该路径为文件路径，无法进入" << endl;
+	}
+	else if (targetpath == NULL) {
+		cout << "cd: " << name << ": 没有那个文件或目录" << endl;
 	}
 
 }
@@ -804,6 +807,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	if (!isSonFolder) {
 		path = getInodeByPathName(name, folderInode);
 		if (path == NULL) {
+			cout << "rm: 无法删除\"" << name << "\": 没有那个文件或目录" << endl;
 			return;
 		}
 	}
@@ -961,7 +965,7 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 
 		}
 		if (!haveSuchAPath) {
-			cout << "没有\"" << path[p] << "\"那个路径" << endl;
+			//cout << "没有\"" << path[p] << "\"那个路径" << endl;
 			return NULL;
 		}
 		// 若在最后一个路径之前出现普通文件，输出错误信息
