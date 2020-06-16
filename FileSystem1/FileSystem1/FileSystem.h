@@ -32,7 +32,8 @@ const int DiskBlockSum = 1 + InodeBitMapBlockSum + InodeBlockSum +1+ DataBlockSu
 
 const int InodeBitmapBlockStart = 1;
 const int InodeBlockStart = 1 + InodeBitMapBlockSum;
-const int DataBlockStart = InodeBlockSum + 1+InodeBitMapBlockSum;//1号放超级块，2——257号放inode，258——1282号放数据块
+const int UserBlockStart = 1 + InodeBitMapBlockSum + InodeBlockSum;
+const int DataBlockStart =  1+InodeBitMapBlockSum+ InodeBlockSum + 1;//1号放超级块，2——257号放inode，258——1282号放数据块
 
 
 
@@ -141,10 +142,13 @@ struct User
 };
 
 extern bool isLogin;
-bool Login(char* name, char* password);
+bool Login(char* name, char* password,Disk&disk);
 bool Logout();
-bool useradd(char* name, char* password, char* pawword2);
+bool useradd();
+bool useradd(char* name, char* password, char* pawword2,Disk&disk);
+void initUserBlock(Disk& disk);
 
+void UserManager(Disk& disk); //负责调用user有关的函数来显示
 
 
 //---------------共享变量----------------------------------------------------------------------------------

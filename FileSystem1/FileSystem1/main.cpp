@@ -29,6 +29,7 @@ int main()
 	initInode();
 	initGroupLink(disk);
 	InitRootFolder();
+	initUserBlock(disk);
 
 	//showAll();
 	//cout << "int: "  << sizeof(int) << endl;
@@ -42,6 +43,8 @@ int main()
 
 	while (1)
 	{
+		UserManager(disk);
+
 		ShowNowPathInfo();
 		char Arr[MAXPATH_LEN * 3] = { 0 };
 		char Arr1[MAXPATH_LEN] = { 0 };
@@ -138,7 +141,10 @@ int main()
 		else if (strcmp(Arr1, "cp") == 0) {
 			CP(NowPath, Arr2, Arr3);
 		}
+		else if (strcmp(Arr1, "useradd") == 0)
+		{
 
+		}
 	}
 
 	return 0;

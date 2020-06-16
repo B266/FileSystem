@@ -114,11 +114,16 @@ void initGroupLink(Disk& disk)
 	SuperBlock.SuperEmptyBlockList.EmptyBlockList[1] = DataBlockStart;
 	for (int i = 0; i < FreeBlockSum; i++)
 	{
-		FreeBlock freeBlock = makeFreeBlock(disk, i * 100 + DataBlockStart);
 
-		memset(&disk.data[i * 100 + DataBlockStart], 0, sizeof(block));
-		::memcpy(&disk.data[i * 100 + DataBlockStart], &freeBlock, sizeof(FreeBlock));
-		//cout << "Make linklist " << i * 100 + DataBlockStart << endl;
+		if (i * 100 + DataBlockStart < DiskBlockSum)
+		{
+			FreeBlock freeBlock = makeFreeBlock(disk, i * 100 + DataBlockStart);
+
+			::memset(&disk.data[i * 100 + DataBlockStart], 0, sizeof(block));
+			::memcpy(&disk.data[i * 100 + DataBlockStart], &freeBlock, sizeof(FreeBlock));
+			//cout << "Make linklist " << i * 100 + DataBlockStart << endl;
+		}
+
 	}
 }
 
@@ -1296,7 +1301,101 @@ void Format()
 }
 
 
-bool Login(char* name, char* password)
+bool Login(char* name, char* password,Disk&disk)
+{
+	User user = LoadUserFromDisk(disk);
+	for (int i = 0; i < user.userSum; i++)
+	{
+		if (strcmp(user.name[i], name) == 0)
+		{
+			if (strcmp(user.password[i], password) == 0)
+			{
+				isLogin = true;
+				strcpy_s(NowUser, name);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void initUserBlock(Disk &disk)
+{
+	User user = LoadUserFromDisk(disk);
+	user.userSum = 1;
+	strcpy_s(user.name[0], "root");
+	strcpy_s(user.password[0], "");
+	SaveUserToDisk(disk, user);
+}
+
+bool Logout()
+{
+	isLogin = false;
+	return true;
+}
+
+bool useradd(char* name, char* password, char* password2,Disk&disk)
+{
+	//不能重名
+	User user = LoadUserFromDisk(disk);
+	bool isNameUsed = false;
+	for (int i = 0; i < user.userSum; i++)
+	{
+		if (strcmp(name, user.name[i]) == 0)
+		{
+			isNameUsed = true;
+			break;
+		}
+	}
+	if (isNameUsed)
+	{
+		return false;
+	}
+	//密码两次要一样
+	if (strcmp(password, password2) == 0)
+	{
+		strcpy_s(user.name[user.userSum], name);
+		strcpy_s(user.password[user.userSum], password);
+		user.userSum++;
+		SaveUserToDisk(disk, user);
+		return true;
+	}
+	return false;
+
+}
+
+User LoadUserFromDisk(Disk& disk)
+{
+	User user;
+	memcpy(&user, &disk.data[UserBlockStart], sizeof(User));
+	return user;
+}
+void SaveUserToDisk(Disk& disk, User user)
+{
+	memcpy(&disk.data[UserBlockStart], &user, sizeof(User));
+}
+
+void UserManager(Disk &disk)
+{
+	while (1)
+	{
+		if (isLogin == true)
+		{
+			break;
+		}
+		cout << "login as: ";
+		char name[NameLen];
+		cin.getline(name,NameLen);
+		cout << name << "@" << DeviceName << "'s password:";
+		char password[PassWordLen];
+		cin.getline(password, PassWordLen);
+		Login(name, password, disk);
+		
+	}
+}
+
+bool useradd()
 {
 	return true;
 }
