@@ -610,29 +610,16 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 
 	inode* targetInode = getInodeByPathName(folderName, FatherFolderInode, 2);
 	if (targetInode != NULL) {
-		char path[10][20]; // 最多10层路径
-		int i = 0, pathNum = 0, k = 0;
-		// 切割路径
-		while (*(folderName + i) != '\0') {
-			// 若不是路径分割符
-			if (*(folderName + i) != '/') {
-				path[pathNum][k] = *(folderName + i);
-				k++;
-			}
-			// 若为路径分割符则准备填写下一个路径
-			if (*(folderName + i) == '/' && i != 0) {
-				path[pathNum][k] = '\0';
-				k = 0;
-				pathNum++;
-			}
-			i++;
+		char FileName[NameLen] = { 0 };
+		char ExtensionName[NameLen] = { 0 };
+		GetFileNameAndExtensionName(folderName, FileName, ExtensionName);
+		// 查看是否有同名文件
+		inode* haveThatFolder = getInodeByPathName(FileName, targetInode);
+		if (haveThatFolder != NULL) {
+			cout << "mkdir: 无法创建\"" << FileName << "\": 有同名文件已存在" << endl;
+			return;
 		}
-		// 最后一个字符若不是分割符则路径数量加1
-		if (*(folderName + i - 1) != '/') {
-			path[pathNum][k] = '\0';
-			pathNum++;
-		}
-		::memcpy(folderName, path[pathNum - 1], strlen(path[pathNum - 1]) + 1);
+		::memcpy(folderName, FileName, strlen(FileName) + 1);
 	}
 	else {
 		return;
@@ -939,6 +926,12 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 		path[pathNum][k] = '\0';
 		pathNum++;
 	}
+	char allName[MAXPATH_LEN];
+	memcpy(allName, folderPathName, strlen(folderPathName) + 1);
+	char FileName[NameLen] = { 0 };
+	char ExtensionName[NameLen] = { 0 };
+	GetFileNameAndExtensionName(allName, FileName, ExtensionName);
+	strcpy_s(path[pathNum - 1], FileName);
 
 	// 绝对地址
 	if (*folderPathName == '/') {
@@ -1216,36 +1209,17 @@ void MV(inode* NowPath, char* fileName, char* targetName) {
 		return;
 	}
 	// 移动
-	char path[10][20]; // 最多10层路径
-	int i = 0, pathNum = 0, k = 0;
-	// 切割路径
-	while (*(fileName + i) != '\0') {
-		// 若不是路径分割符
-		if (*(fileName + i) != '/') {
-			path[pathNum][k] = *(fileName + i);
-			k++;
-		}
-		// 若为路径分割符则准备填写下一个路径
-		if (*(fileName + i) == '/' && i != 0) {
-			path[pathNum][k] = '\0';
-			k = 0;
-			pathNum++;
-		}
-		i++;
-	}
-	// 最后一个字符若不是分割符则路径数量加1
-	if (*(fileName + i - 1) != '/') {
-		path[pathNum][k] = '\0';
-		pathNum++;
-	}
+	char FileName[NameLen] = { 0 };
+	char ExtensionName[NameLen] = { 0 };
+	GetFileNameAndExtensionName(fileName, FileName, ExtensionName);
 	// 查看是否有同名文件
-	inode* haveThatFolder = getInodeByPathName(path[pathNum - 1], targetPath);
+	inode* haveThatFolder = getInodeByPathName(FileName, targetPath);
 	if (haveThatFolder != NULL) {
 		cout << "mv: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 有同名文件已存在" << endl;
 		return;
 	}
 	//修改上级目录
-	AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
+	AddItemInFolder(targetPath, FileName, filePath->inodeId);
 	DeleteItemInFolder(fileLastPath, filePath);
 
 }
@@ -1265,28 +1239,9 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 		return;
 	}
 	// 移动
-	char path[10][20]; // 最多10层路径
-	int i = 0, pathNum = 0, k = 0;
-	// 切割路径
-	while (*(fileName + i) != '\0') {
-		// 若不是路径分割符
-		if (*(fileName + i) != '/') {
-			path[pathNum][k] = *(fileName + i);
-			k++;
-		}
-		// 若为路径分割符则准备填写下一个路径
-		if (*(fileName + i) == '/' && i != 0) {
-			path[pathNum][k] = '\0';
-			k = 0;
-			pathNum++;
-		}
-		i++;
-	}
-	// 最后一个字符若不是分割符则路径数量加1
-	if (*(fileName + i - 1) != '/') {
-		path[pathNum][k] = '\0';
-		pathNum++;
-	}
+	char FileName[NameLen] = { 0 };
+	char ExtensionName[NameLen] = { 0 };
+	GetFileNameAndExtensionName(fileName, FileName, ExtensionName);
 	// 原路径为文件夹
 	if (strcmp(fileInode->ExtensionName, "folder") == 0) {
 
@@ -1297,7 +1252,7 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 		int indexInode = GetAInode();
 		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
 		SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
-		AddItemInFolder(targetInode, path[pathNum - 1], indexInode);
+		AddItemInFolder(targetInode, FileName, indexInode);
 	}
 	//修改上级目录
 	//AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
