@@ -1110,6 +1110,15 @@ bool Export(char* filepathname, char* pathnameInWindows)
 */
 void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName)
 {
+	memset(FileName, 0, strlen(FileName));
+	memset(ExtensionName, 0, strlen(ExtensionName));
+	if (strcmp(AllName, "..") == 0| strcmp(AllName, ".") == 0)
+	{
+		memcpy(FileName, AllName, strlen(AllName));
+		memcpy(ExtensionName, "folder", sizeof("folder"));
+		return;
+	}
+
 	int pointPos = -1;
 	int LastFolderPos = -1;
 	for (int i = 0; i < strlen(AllName); i++)
@@ -1123,8 +1132,7 @@ void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionN
 			LastFolderPos = i;
 		}
 	}
-	memset(FileName, 0, strlen(FileName));
-	memset(ExtensionName, 0, strlen(ExtensionName));
+
 	//如果找到扩展名
 	if (pointPos != -1)
 	{
