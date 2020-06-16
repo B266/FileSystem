@@ -102,7 +102,16 @@ int main()
 		}
 		else if (strcmp(Arr1, "import") == 0)
 		{
-			Import(Arr2, NowPath);
+			if (strlen(Arr2) > 0)
+			{
+				Import(Arr2, NowPath);
+			}
+			else {
+				cout << "请拖拽文件到本窗口";
+				char Path[MAXPATH_LEN] = { 0 };
+				cin >> Path;
+				Import(Path, NowPath);
+			}
 		}
 
 	}

@@ -1120,7 +1120,7 @@ void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionN
 		{
 			pointPos = i;
 		}
-		if (AllName[i] == '/')
+		if (AllName[i] == '/'|| AllName[i]==92)
 		{
 			LastFolderPos = i;
 		}
@@ -1131,7 +1131,7 @@ void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionN
 	if (pointPos != -1)
 	{
 		memcpy(FileName, AllName + LastFolderPos + 1, sizeof(char) * (pointPos - LastFolderPos-1));
-		memcpy(ExtensionName, &AllName[pointPos + 1], sizeof(char) * (strlen(AllName - pointPos)));
+		memcpy(ExtensionName, &AllName[pointPos + 1], sizeof(char) * (strlen(AllName) - pointPos));
 	}
 	else
 	{
