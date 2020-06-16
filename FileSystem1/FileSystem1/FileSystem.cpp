@@ -1073,7 +1073,76 @@ bool Export(char* pathnameInWindows, char* filepathname)
 	return Export(pathnameInWindows, FileInode);
 }
 
+/*
+ 获取字符串的文件名和扩展名
+ 使用样例
+		char name[MAXPATH_LEN*2+1];
+		char FileName[MAXPATH_LEN];
+		char ExtensionName[MAXPATH_LEN];
+		cin >> name;
+
+		GetFileNameAndExtensionName(name, FileName, ExtensionName);
+		cout << FileName << " " << ExtensionName << endl;
+
+*/
+void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName)
+{
+	int pointPos = -1;
+	int LastFolderPos = -1;
+	for (int i = 0; i < strlen(AllName); i++)
+	{
+		if (AllName[i] == '.')
+		{
+			pointPos = i;
+		}
+		if (AllName[i] == '/')
+		{
+			LastFolderPos = i;
+		}
+	}
+	memset(FileName, 0, strlen(FileName));
+	memset(ExtensionName, 0, strlen(ExtensionName));
+	//如果找到扩展名
+	if (pointPos != -1)
+	{
+		memcpy(FileName, AllName + LastFolderPos + 1, sizeof(char) * (pointPos - LastFolderPos-1));
+		memcpy(ExtensionName, &AllName[pointPos + 1], sizeof(char) * (strlen(AllName - pointPos)));
+	}
+	else
+	{
+		memcpy(FileName, AllName + LastFolderPos + 1, sizeof(char) * (strlen(AllName) - LastFolderPos));
+		memcpy(ExtensionName, "folder", sizeof("folder"));
+	}
+
+
+	
+}
+
 bool Import(char* pathname, char* filename, inode* folderInode)
 {
+	//读取全部数据到新的File
+	FILE* In =new  FILE;
+	fopen_s(&In, pathname, "r");
+	if (In == NULL)
+	{
+		return NULL;
+	}
+	fseek(In, 0, SEEK_END);
+	int length = ftell(In);
+	char* InData = (char*)malloc((length + 1) * sizeof(char));
+	rewind(In);
+	length = fread(InData, 1, length, In);
+	InData[length] = '\0';
+	fclose(In);
+
+
+	//新建inode和数据块
+	File* newFile = new File;
+	newFile->data = InData;
+	newFile->dataSize = length;
+	
+	int fileInodeIndex = GetAInode();
+	newFile->fileInode =&Inode[fileInodeIndex];
+	//newFile->fileInode->Name;
 
 }

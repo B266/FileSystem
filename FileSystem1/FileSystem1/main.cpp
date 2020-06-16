@@ -28,7 +28,6 @@ int main()
 	//cout << "inode: " << sizeof(inode) << endl;
 
 
-	
 
 	while (1)
 	{

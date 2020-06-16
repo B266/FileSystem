@@ -202,5 +202,7 @@ void SetTitle(const char* Title);
 void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3);
 
 
+// 获取字符串的文件名和扩展名
+void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName);
 
 #endif
