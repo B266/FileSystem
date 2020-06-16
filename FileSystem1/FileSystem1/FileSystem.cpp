@@ -790,7 +790,7 @@ void DeleteItemInFolder(inode* folderInode, inode* fileInode) {
 		folder->index[i] = folder->index[i + 1];
 	}
 	// 清除掉最后一个多余的文件，置空
-	::memcpy(folder->name[folder->itemSum - 1], 0, sizeof(folder->name[folder->itemSum - 1]));
+	strcpy_s(folder->name[folder->itemSum - 1], "");
 	folder->index[folder->itemSum - 1] = NULL;
 	// 文件夹内的文件总数量减一
 	folder->itemSum--;
@@ -1295,6 +1295,7 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	else {
 		File* newFile = OpenFile(disk, fileInode);
 		int indexInode = GetAInode();
+		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
 		SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
 		AddItemInFolder(targetInode, path[pathNum - 1], indexInode);
 	}
