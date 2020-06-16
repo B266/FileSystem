@@ -391,39 +391,39 @@ void NewTxt(inode* FolderInode)
 	strcpy_s(Inode[indexInode].Name, name);
 	getchar();
 	getchar();
-	const int maxsize = 1024*1024;
+	const int maxsize = 99999;
 
 	//写入自己的datablock
-	char* text = NULL;
-	text = (char*)malloc(512 * sizeof(char));
-	cout << "data:";
+	char text[maxsize] = { 0 };
 
-	while (1)
+cout << "data:";
+
+while (1)
+{
+	char lineBuffer[99999] = { 0 };
+	cin.getline(lineBuffer, 99999);
+	if (strcmp(lineBuffer, ":q") == 0)
 	{
-		char lineBuffer[99999] = { 0 };
-		cin.getline(lineBuffer, 99999);
-		if (strcmp(lineBuffer, ":q") == 0)
-		{
-			break;
-		}
-		::memcpy(text+strlen(text), lineBuffer, strlen(lineBuffer));
-		//添加换行符
-		char n = '\n';
-		::memcpy(text + strlen(text), &n, 1);
+		break;
 	}
+	::memcpy(text + strlen(text), lineBuffer, strlen(lineBuffer));
+	//添加换行符
+	char n = '\n';
+	::memcpy(text + strlen(text), &n, 1);
+}
 
-	SaveFileData(disk, &Inode[indexInode], text, strlen(text));
+SaveFileData(disk, &Inode[indexInode], text, strlen(text));
 
-	
-	//修改上级目录
-	AddItemInFolder(FolderInode, name, indexInode);
+
+//修改上级目录
+AddItemInFolder(FolderInode, name, indexInode);
 
 }
 
 
-void ShowText(char *pathName, inode* nowpath)
+void ShowText(char* pathName, inode* nowpath)
 {
-	inode* fileinode=NULL;
+	inode* fileinode = NULL;
 	inode* path = nowpath; // 保存原路径不变
 	char nowPathName_backup[MAXPATH_LEN];
 	// 备份路径
@@ -435,7 +435,7 @@ void ShowText(char *pathName, inode* nowpath)
 		fileinode = targetpath;
 	}
 	// 若不是文件，则恢复路径
-	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0 ){
+	else if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
 		memcpy(NowPathName, nowPathName_backup, strlen(nowPathName_backup) + 1);
 		cout << "该路径不是文件，无法打开" << endl;
 	}
@@ -445,16 +445,16 @@ void ShowText(char *pathName, inode* nowpath)
 	{
 		return;
 	}
-	File* openFile = OpenFile(disk,fileinode);
-	
+	File* openFile = OpenFile(disk, fileinode);
+
 	cout << "filename:" << fileinode->Name << endl;
 	cout << "data:" << endl;
 	cout << openFile->data;
 
-	
+
 }
 
-File* OpenFile(Disk &disk, inode* fileInode)
+File* OpenFile(Disk& disk, inode* fileInode)
 {
 	File* newFile = new File;
 
@@ -468,7 +468,7 @@ File* OpenFile(Disk &disk, inode* fileInode)
 	for (int i = 0; i < min(fileDataBlockSum, 10); i++)
 	{
 		TextBlock* textBlock = LoadTextBlockFromDisk(disk, fileInode->DataBlockIndex0[i]);
-		::memcpy(newFile->data+i* CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+		::memcpy(newFile->data + i * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
 
 	}
 	if (fileDataBlockSum > 10)
@@ -478,8 +478,31 @@ File* OpenFile(Disk &disk, inode* fileInode)
 		{
 			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile.index[i - 10]);
 			::memcpy(newFile->data + i * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
-			
+
 		}
+	}
+	if (fileDataBlockSum > 138)
+	{
+		DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, fileInode->DataBlockIndex2);
+		DataBlockIndexFile dataBlockIndexFile2s;
+		for (int i = 0; i < (fileDataBlockSum - 138) / 128 - 1; i++)
+		{
+			dataBlockIndexFile2s = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile2.index[i]);
+			for (int j = 0; j < 128; j++)
+			{
+				TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile2s.index[j]);
+				::memcpy(newFile->data + (138 + i * 128 + j) * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+			}
+		}
+
+		int t = (fileDataBlockSum - 138) / 128;
+		dataBlockIndexFile2s = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile2.index[t]);
+		for (int i = 0; i < (fileDataBlockSum - 138) % 128; i++)
+		{
+			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile2s.index[i]);
+			::memcpy(newFile->data + (138 + t * 128 + i) * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+		}
+
 	}
 	return newFile;
 
