@@ -1298,3 +1298,29 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	//AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
 
 }
+
+void Format()
+{
+	//格式化磁盘文件
+	memset(&disk, 0, sizeof(disk));
+	//格式化超级块
+	memset(&SuperBlock, 0, sizeof(SuperBlock));
+	//格式化Inode节点
+	memset(Inode, 0, sizeof(Inode));
+	//格式化位图
+	memset(InodeBitmap, 0, sizeof(InodeBitmap));
+	lastInodePos = 0;
+	NowPath = &Inode[SuperBlock.firstInode];
+	RootPath = &Inode[SuperBlock.firstInode];
+
+	memcpy(NowPathName, "/", 2);
+	memcpy(NowUser, "root", 5);
+	memcpy(DeviceName, "Disk0", 6);
+
+	initInode();//初始化inode
+	initGroupLink(disk);//初始化磁盘块区，按成组链法组织
+	InitRootFolder();//初始化目录
+
+	return;
+
+}
