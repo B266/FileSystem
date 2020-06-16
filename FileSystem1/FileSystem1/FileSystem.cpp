@@ -1291,6 +1291,7 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	else {
 		File* newFile = OpenFile(disk, fileInode);
 		int indexInode = GetAInode();
+		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
 		SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
 		AddItemInFolder(targetInode, path[pathNum - 1], indexInode);
 	}
