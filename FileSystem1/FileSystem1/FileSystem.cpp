@@ -478,6 +478,29 @@ File* OpenFile(Disk &disk, inode* fileInode)
 			
 		}
 	}
+	if (fileDataBlockSum > 138)
+	{
+		DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, fileInode->DataBlockIndex2);
+		DataBlockIndexFile dataBlockIndexFile2s;
+		for (int i = 0; i < (fileDataBlockSum - 138) / 128 - 1; i++)
+		{
+			dataBlockIndexFile2s = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile2.index[i]);
+			for (int j = 0; j < 128; j++)
+			{
+				TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile2s.index[j]);
+				::memcpy(newFile->data + (138 + i * 128 + j) * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+			}
+		}
+
+		int t = (fileDataBlockSum - 138) / 128;
+		dataBlockIndexFile2s = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile2.index[t]);
+		for (int i = 0; i < (fileDataBlockSum - 138) % 128; i++)
+		{
+			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile2s.index[i]);
+			::memcpy(newFile->data + (138 + t * 128 + i) * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+		}
+
+	}
 	return newFile;
 
 }
