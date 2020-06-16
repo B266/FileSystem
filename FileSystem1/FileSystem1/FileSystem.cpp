@@ -425,7 +425,7 @@ void ShowText(char *pathName, inode* nowpath)
 	// 备份路径
 	memcpy(nowPathName_backup, NowPathName, strlen(NowPathName) + 1);
 	// 计算目标路径的inode
-	inode* targetpath = getInodeByPathName(pathName, path, 1);
+	inode* targetpath = getInodeByPathName(pathName, path);
 	// 若当前inode为文件，则为fileinode赋值
 	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") != 0) {
 		fileinode = targetpath;
@@ -650,7 +650,7 @@ void CutPath(char* name)
 void CD(char* name, inode** nowpath)
 {
 	inode** path = nowpath; // 备份nowpath
-	inode* targetpath = getInodeByPathName(name, *path, 1); // 获取目标地址的inode
+	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
 
 	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
 	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
@@ -740,7 +740,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
 	inode* path;
 	if (!isSonFolder) {
-		path = getInodeByPathName(name, folderInode, 1);
+		path = getInodeByPathName(name, folderInode);
 		if (path == NULL) {
 			return;
 		}
@@ -774,6 +774,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 		else if (answer == 'n') {
 			return;
 		}
+		getchar();
 	}
 	// 若有此文件，执行删除
 	if (haveSuchAFile) {

@@ -174,7 +174,7 @@ Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
 void AddItemInFolder(inode* folderInode, char* name, int inodeIndex);
 void DeleteItemInFolder(inode* folderInode, inode* fileInode); // 更改目录结构，删除一个文件
-inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode);
+inode* getInodeByPathName(const char* folderPathName, inode* nowPath=NowPath, int mode=1);
 
 
 void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock);
