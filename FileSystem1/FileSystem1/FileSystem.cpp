@@ -1253,13 +1253,15 @@ void MV(inode* NowPath, char* fileName, char* targetName) {
 }
 
 void CP(inode* NowPath, char* fileName, char* targetName) {
+	cout << "fileName:" << fileName << endl;
+	cout << "targetName: " << targetName << endl;
 	inode* fileInode = getInodeByPathName(fileName, NowPath);
 	inode* fileLastInode = getInodeByPathName(fileName, NowPath, 2);
 	inode* targetInode = getInodeByPathName(targetName, NowPath);
 	//inode* targetLastInode = getInodeByPathName(targetName, NowPath, 2);
 
 	if (fileInode == NULL || targetInode == NULL) {
-		cout << "cp: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 没有那个文件或目录" << endl;
+		cout << "cp: 无法将\"" << fileName << "\" 复制至\"" << targetName << "\": 没有那个文件或目录" << endl;
 		return;
 	}
 	if (strcmp(targetInode->ExtensionName, "folder") != 0) {
@@ -1270,9 +1272,40 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	char FileName[NameLen] = { 0 };
 	char ExtensionName[NameLen] = { 0 };
 	GetFileNameAndExtensionName(fileName, FileName, ExtensionName);
+	// 查看是否有同名文件
+	inode* haveSameNameFolder = getInodeByPathName(fileName, targetInode);
+	if (haveSameNameFolder != NULL) {
+		cout << "cp: 无法复制\"" << FileName << "." << ExtensionName << "\": 有同名文件已存在" << endl;
+		return;
+	}
 	// 原路径为文件夹
 	if (strcmp(fileInode->ExtensionName, "folder") == 0) {
+		Folder* newFolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
+		int indexInode = GetAInode();
+		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
+		int indexBlock = GetOneBlock(disk);
+		//SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
+		SaveFolderToBlock(disk, indexBlock, *newFolder);
+		AddItemInFolder(targetInode, FileName, indexInode);
+		//inode* folderInode = getInodeByPathName(fileName, targetInode);
 
+		Folder* nowfolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
+		char newTargetName[MAXPATH_LEN];
+		strcpy_s(newTargetName, targetName);
+		strcat_s(newTargetName, "/");
+		strcat_s(newTargetName, FileName);
+		for (int i = 2; i < nowfolder->itemSum; i++) {
+			char nowFileName[20];
+			strcpy_s(nowFileName, fileName);
+			strcat_s(nowFileName, "/");
+			strcat_s(nowFileName, nowfolder->name[i]);
+			if (strcmp(Inode[nowfolder->index[i]].ExtensionName, "folder") != 0)
+			{
+				strcat_s(nowFileName, ".");
+				strcat_s(nowFileName, Inode[nowfolder->index[i]].ExtensionName);
+			}
+			CP(NowPath, nowFileName, newTargetName);
+		}
 	}
 	// 原路径为文件
 	else {
@@ -1282,9 +1315,6 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 		SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
 		AddItemInFolder(targetInode, FileName, indexInode);
 	}
-	//修改上级目录
-	//AddItemInFolder(targetPath, path[pathNum - 1], filePath->inodeId);
-
 }
 
 void Format()
