@@ -3330,6 +3330,7 @@ void initComplier()
 	location = 0;
 	globalOffset = 0;
 	frameoffset = initFO;
+	Error = false;
 
 	/* numOfParams is the number of parameters in current frame */
 	numOfParams = 0;
@@ -3384,15 +3385,13 @@ char* complier(char * data,int datasize,char *filename)
 
 
 	fprintf(listing, "\nTINY COMPILATION: %s\n", filename);
-#if NO_PARSE
-	while (getToken() != ENDFILE);
-#else
+
 	syntaxTree = parse();
 	if (TraceParse) {
 		fprintf(listing, "\nSyntax tree:\n");
 		printTree(syntaxTree);
 	}
-#if !NO_ANALYZE
+
 	if (!Error)
 	{
 		if (TraceAnalyze) fprintf(listing, "\nBuilding Symbol Table...\n");
@@ -3403,7 +3402,6 @@ char* complier(char * data,int datasize,char *filename)
 	}
 	
 
-#if !NO_CODE
 	char* codefile=NULL;
 	if (!Error)
 	{
@@ -3424,10 +3422,13 @@ char* complier(char * data,int datasize,char *filename)
 		fprintf(listing, "Code Gen Finished\n");
 		fclose(code);
 	}
-#endif
-#endif
-#endif
+
 	fclose(source);
+	if (Error)
+	{
+		fprintf(listing, "Complier Error, ShutDown!\n");
+		return NULL;
+	}
 
 
 	//读取全部数据到新的File
@@ -3439,6 +3440,10 @@ char* complier(char * data,int datasize,char *filename)
 	fseek(code, 0, SEEK_END);
 	int length = ftell(code);
 	char* codeData = (char*)malloc((length + 1) * sizeof(char));
+	if (codeData == NULL)
+	{
+		return NULL;
+	}
 	rewind(code);
 	length = fread(codeData, 1, length, code);
 	codeData[length] = '\0';
