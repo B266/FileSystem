@@ -294,6 +294,7 @@ void LoadDisk()
 	in.close();
 	::memcpy(&disk, buffer, sizeof(Disk));
 	free(buffer);
+	isLogin = false;
 
 	LoadSuperBlockFromDisk(SuperBlock, disk);
 	LoadInodeFromDisk(*InodeBitmap, *Inode, disk);
@@ -1287,7 +1288,8 @@ void Format()
 	lastInodePos = 0;
 	NowPath = &Inode[SuperBlock.firstInode];
 	RootPath = &Inode[SuperBlock.firstInode];
-
+	
+	isLogin = false;
 	memcpy(NowPathName, "/", 2);
 	memcpy(NowUser, "root", 5);
 	memcpy(DeviceName, "Disk0", 6);
@@ -1295,6 +1297,7 @@ void Format()
 	initInode();//初始化inode
 	initGroupLink(disk);//初始化磁盘块区，按成组链法组织
 	InitRootFolder();//初始化目录
+	initUserBlock(disk);
 
 	return;
 
@@ -1322,11 +1325,8 @@ bool Login(char* name, char* password,Disk&disk)
 
 void initUserBlock(Disk &disk)
 {
-	User user = LoadUserFromDisk(disk);
-	user.userSum = 1;
-	strcpy_s(user.name[0], "root");
-	strcpy_s(user.password[0], "");
-	SaveUserToDisk(disk, user);
+	char name[] = "root";
+	useradd(name, disk);
 }
 
 bool Logout()
@@ -1335,8 +1335,14 @@ bool Logout()
 	return true;
 }
 
-bool useradd(char* name, char* password, char* password2,Disk&disk)
+bool useradd(char* name,Disk&disk)
 {
+	//名字不能为空
+	if (strlen(name) == 0)
+	{
+		return false;
+	}
+
 	//不能重名
 	User user = LoadUserFromDisk(disk);
 	bool isNameUsed = false;
@@ -1352,16 +1358,14 @@ bool useradd(char* name, char* password, char* password2,Disk&disk)
 	{
 		return false;
 	}
-	//密码两次要一样
-	if (strcmp(password, password2) == 0)
-	{
-		strcpy_s(user.name[user.userSum], name);
-		strcpy_s(user.password[user.userSum], password);
-		user.userSum++;
-		SaveUserToDisk(disk, user);
-		return true;
-	}
-	return false;
+	strcpy_s(user.name[user.userSum], name);
+	memset(user.password[user.userSum], 0, sizeof(char) * PassWordLen);
+	user.userSum++;
+	SaveUserToDisk(disk, user);
+
+	NewFolder(disk, RootPath, name);
+	return true;
+
 
 }
 
@@ -1391,11 +1395,68 @@ void UserManager(Disk &disk)
 		char password[PassWordLen];
 		cin.getline(password, PassWordLen);
 		Login(name, password, disk);
-		
 	}
 }
 
 bool useradd()
 {
+	char name[NameLen] = { 0 };
+	char password[PassWordLen] = { 0 };
+	char password1[PassWordLen] = { 0 };
+	cin.getline(name,NameLen);
+
+	cin.getline(password, PassWordLen);
+	cin.getline(password1, PassWordLen);
+
+	useradd(name,disk);
 	return true;
+}
+
+void passwd(char* username,Disk&disk)
+{
+	User user = LoadUserFromDisk(disk);
+	char findname[NameLen] = { 0 };
+	if (strlen(username) == 0)
+	{
+		strcpy_s(findname, NowUser);
+	}
+	else
+	{
+		strcpy_s(findname, username);
+	}
+	for (int i = 0; i < user.userSum; i++)
+	{
+		if (strcmp(user.name[i], findname) == 0)
+		{
+			SetConsoleTextAttribute(CommandLineHandle, 0x0c);
+			//cout << ((strcmp(NowPathName, "/") == 0) ? "" : NowPathName);
+			cout << "Changing password for " << findname << endl;
+			SetConsoleTextAttribute(CommandLineHandle, 0x07);
+			char passowrdOld[PassWordLen] = { 0 };
+			cout << "(current) password:";
+			cin.getline( passowrdOld,PassWordLen);
+			char passwordNew[PassWordLen] = { 0 };
+			cout << "Enter new password:";
+			cin.getline( passwordNew,PassWordLen);
+			char passwordNew1[PassWordLen] = { 0 };
+			cout << "Retype new password:";
+			cin.getline( passwordNew1,PassWordLen);
+			if (strcmp(passowrdOld, user.password[i]) != 0)
+			{
+				cout << "passwd: old password wrong! password update failed" << endl;
+				return;
+			}
+			if (strcmp(passwordNew, passwordNew1) == 0)
+			{
+				cout << "passwd: password updated successfully" << endl;
+				strcpy_s(user.password[i], passwordNew);
+			}
+			else
+			{
+				cout << "passwd: new password not the same! password update failed " << endl;
+			}
+
+		}
+	}
+	SaveUserToDisk(disk, user);
 }

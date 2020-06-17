@@ -144,8 +144,9 @@ struct User
 extern bool isLogin;
 bool Login(char* name, char* password,Disk&disk);
 bool Logout();
-bool useradd();
-bool useradd(char* name, char* password, char* pawword2,Disk&disk);
+
+bool useradd(char* name,Disk&disk);
+void passwd(char* username,Disk&disk);
 void initUserBlock(Disk& disk);
 
 void UserManager(Disk& disk); //负责调用user有关的函数来显示

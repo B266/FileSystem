@@ -26,11 +26,7 @@ int main()
 	SetLayeredWindowAttributes(hw, NULL, (230 * 100) / 100, LWA_ALPHA);
 	
 	//cout << "DataBlockIndexFile: " << sizeof(DataBlockIndexFile) << endl;
-	initInode();
-	initGroupLink(disk);
-	InitRootFolder();
-	initUserBlock(disk);
-
+	Format();
 	//showAll();
 	//cout << "int: "  << sizeof(int) << endl;
 	//cout << sizeof(Folder) << endl;
@@ -50,6 +46,8 @@ int main()
 		char Arr1[MAXPATH_LEN] = { 0 };
 		char Arr2[MAXPATH_LEN] = { 0 };
 		char Arr3[MAXPATH_LEN] = { 0 };
+		cin.clear();
+		cin.sync();
 		cin.getline(Arr, MAXPATH_LEN * 3);
 		CutArr(Arr, Arr1, Arr2, Arr3);
 		//切成三个命令参数来计算
@@ -143,8 +141,13 @@ int main()
 		}
 		else if (strcmp(Arr1, "useradd") == 0)
 		{
-
+			useradd(Arr2, disk);
 		}
+		else if (strcmp(Arr1, "passwd") == 0)
+		{
+			passwd(Arr2, disk);
+		}
+		
 	}
 
 	return 0;
