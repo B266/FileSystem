@@ -1377,8 +1377,8 @@ void MV(inode* NowPath, char* fileName, char* targetName) {
 }
 
 void CP(inode* NowPath, char* fileName, char* targetName) {
-	cout << "fileName:" << fileName << endl;
-	cout << "targetName: " << targetName << endl;
+	/*cout << "fileName:" << fileName << endl;
+	cout << "targetName: " << targetName << endl;*/
 	inode* fileInode = getInodeByPathName(fileName, NowPath);
 	inode* fileLastInode = getInodeByPathName(fileName, NowPath, 2);
 	inode* targetInode = getInodeByPathName(targetName, NowPath);
@@ -1418,17 +1418,6 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	}
 	// 原路径为文件夹
 	if (strcmp(fileInode->ExtensionName, "folder") == 0) {
-		//Folder* newFolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
-		//int indexInode = GetAInode();
-		//memcpy(&Inode[indexInode], fileInode, sizeof(inode));
-		//int indexBlock = GetOneBlock(disk);
-
-		////SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
-
-		//SaveFolderToBlock(disk, indexBlock, *newFolder);
-		//AddItemInFolder(targetInode, FileName, indexInode);
-
-		//inode* folderInode = getInodeByPathName(fileName, targetInode);
 
 		NewFolder(disk, targetInode, FileName);
 
@@ -1455,6 +1444,7 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 		File* newFile = OpenFile(disk, fileInode);
 		int indexInode = GetAInode();
 		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
+		Inode[indexInode].inodeId = indexInode;
 		SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
 		AddItemInFolder(targetInode, FileName, indexInode);
 	}
