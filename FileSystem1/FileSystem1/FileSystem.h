@@ -138,6 +138,7 @@ struct User
 {
 	int userSum = 0;
 	char name[8][NameLen] = { 0 };
+	char GroupName[8][NameLen] = { 0 };
 	char password[8][PassWordLen] = { 0 };
 };
 
@@ -150,6 +151,12 @@ void passwd(char* username,Disk&disk);
 void initUserBlock(Disk& disk);
 
 void UserManager(Disk& disk); //负责调用user有关的函数来显示
+
+
+//判断是否可执行操作 
+// file待判断的文件
+// mode 模式 0 读 1 写 2 执行
+bool JudgePermission(inode* file, int mode);
 
 
 //---------------共享变量----------------------------------------------------------------------------------
@@ -166,6 +173,7 @@ extern inode* RootPath; //根目录
 extern char NowPathName[MAXPATH_LEN];
 extern char NowUser[MAXUSERNAME_LEN]; 
 extern char DeviceName[MAXDEVICENAME_LEN];
+extern char NowGroupName[NameLen];
 extern HANDLE CommandLineHandle;
 
 //----------------函数声明-----------------------------------------------------------------------------
@@ -199,7 +207,6 @@ void SaveFileData(Disk&disk ,inode* fileInode,char *data,int datasize); //保存某
 
 
 
-
 void SaveFolderToBlock(Disk& disk, int index, Folder folder);
 Folder* loadFolderFromDisk(Disk& disk, int index);
 void InitRootFolder();
@@ -222,6 +229,10 @@ bool Chmod(char* pathname, int permission, inode* nowpath);
 bool Rename(char* filenameandpath, char* name); //重命名
 //Export 本硬盘内的文件 windows内的文件
 bool Export(char* pathnameInWindows, char* filepathname);
+void WrongCommand(char*Arr1);
+
+//switch user 切换账户
+void su(char* username); 
 
 //Import  windows内的文件
 bool Import(char* pathnameInWindows, inode* NowPath);
