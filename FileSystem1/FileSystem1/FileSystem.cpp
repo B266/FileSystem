@@ -627,8 +627,8 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 		char ExtensionName[NameLen] = { 0 };
 		GetFileNameAndExtensionName(folderName, FileName, ExtensionName);
 		// 查看是否有同名文件
-		inode* haveThatFolder = getInodeByPathName(FileName, targetInode);
-		if (haveThatFolder != NULL) {
+		inode* haveSameNameFolder = getInodeByPathName(FileName, targetInode);
+		if (haveSameNameFolder != NULL) {
 			cout << "mkdir: 无法创建\"" << FileName << "\": 有同名文件已存在" << endl;
 			return;
 		}
@@ -915,7 +915,7 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 		1. 路径中的任意一环不存在，则返回NULL
 		2. 路径格式不符合规范，返回NULL
 		3. 路径存在，则返回其inode
-		   (1)mode=1时，返回路径的最后一个节点的inode
+		   (1)默认mode=1，返回路径的最后一个节点的inode
 		   (2)mode=2时，不会判断最后一个节点是否存在，提前结束循环，返回路径的倒数第二个节点的inode
 		使用函数建议：使用 if(targetpath != NULL) 判断是否获取了inode
 					使用 if(strcmp(targetpath->ExtensionName, "folder") == 0) 判断当前inode是否为文件夹格式
@@ -969,6 +969,9 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 		bool haveSuchAPath = false;
 		for (int q = 0; q < folder->itemSum; q++) {
 			if (strcmp(path[p], folder->name[q]) == 0) {
+				if (p == pathNum - 1 && strcmp(Inode[folder->index[q]].ExtensionName, ExtensionName) != 0) {
+					continue;
+				}
 				targetPath = &Inode[folder->index[q]];
 				haveSuchAPath = true;
 				break; // 找到路径退出当前文件夹的遍历
@@ -976,7 +979,6 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 
 		}
 		if (!haveSuchAPath) {
-			//cout << "没有\"" << path[p] << "\"那个路径" << endl;
 			return NULL;
 		}
 		// 若在最后一个路径之前出现普通文件，输出错误信息
