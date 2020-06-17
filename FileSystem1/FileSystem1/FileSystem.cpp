@@ -344,8 +344,13 @@ void InitRootFolder()
 	rootF.itemSum = 2;
 	strcpy_s(Inode[SuperBlock.firstInode].Name, "root");
 	strcpy_s(Inode[SuperBlock.firstInode].ExtensionName, "folder");
-	SaveFolderToBlock(disk, Inode[SuperBlock.firstInode].DataBlockIndex0[0], rootF);
 
+
+
+	strcpy_s(Inode[SuperBlock.firstInode].username, NowUser);
+	strcpy_s(Inode[SuperBlock.firstInode].usergroupname, NowGroupName);
+	Inode[SuperBlock.firstInode].permissions = 777;
+	SaveFolderToBlock(disk, Inode[SuperBlock.firstInode].DataBlockIndex0[0], rootF);
 
 }
 
@@ -386,6 +391,12 @@ void NewTxt(inode* FolderInode)
 	int indexInode = GetAInode();
 	int indexBlock;
 
+
+	if (JudgePermission(FolderInode, 1) == false)
+	{
+		cout << "new: permission denied!" << endl;
+		return;
+	}
 
 	//写入自己的inode
 
@@ -452,6 +463,13 @@ void ShowText(char* pathName, inode* nowpath)
 	}
 	else if (targetpath == NULL) {
 		cout << "open: " << pathName << ": 没有那个文件或目录" << endl;
+		return;
+	}
+
+
+	if (JudgePermission(fileinode, 0) == false)
+	{
+		cout << "open: permission denied!" << endl;
 		return;
 	}
 
@@ -638,6 +656,14 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 		return;
 	}
 
+	//权限判断
+	if (JudgePermission(targetInode, 1) == false)
+	{
+		cout << "mkdir: permission denied!" << endl;
+		return;
+	}
+
+
 	sprintf_s(folderBlock.name[0], "..");
 	sprintf_s(folderBlock.name[1], ".");
 	folderBlock.itemSum = 2;
@@ -654,7 +680,7 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 	strcpy_s(Inode[inodeId].ExtensionName, "folder");
 	strcpy_s(Inode[inodeId].username, NowUser);
 	strcpy_s(Inode[inodeId].usergroupname, NowGroupName);
-	Inode[inodeId].permissions = 777;
+	Inode[inodeId].permissions = 755;
 	SaveFolderToBlock(disk, blockId, folderBlock);
 
 	//修改上级目录
@@ -665,6 +691,7 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 void LS(char* folderPathName)
 {
 	inode* nowFolderInode = getInodeByPathName(folderPathName);
+
 	if (strcpy_s(nowFolderInode->ExtensionName, "folder") == 0)
 	{
 		LS(nowFolderInode);
@@ -673,6 +700,14 @@ void LS(char* folderPathName)
 
 void LS(inode* FolderInode)
 {
+	//权限判断
+	if (JudgePermission(FolderInode, 0) == false)
+	{
+		cout << "ls: permission denied!" << endl;
+		return;
+	}
+
+
 	Folder* folder = loadFolderFromDisk(disk, FolderInode->DataBlockIndex0[0]);
 
 	for (int i = 2; i < folder->itemSum; i++)
@@ -718,6 +753,13 @@ void CD(char* name, inode** nowpath)
 {
 	inode** path = nowpath; // 备份nowpath
 	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
+		//权限判断
+	if (JudgePermission(targetpath, 0) == false)
+	{
+		cout << "cd: permission denied!" << endl;
+		return;
+	}
+	//权限判断
 
 	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
 	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
@@ -805,6 +847,9 @@ void DeleteItemInFolder(inode* folderInode, inode* fileInode) {
 
 // 删除文件操作
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
+
+
+
 	bool rmFlag = false; // 默认未删除指定文件
 	bool isFolder = false; // 判断是否为文件夹，输出不同的提示信息
 	Folder* folder = loadFolderFromDisk(disk, folderInode->DataBlockIndex0[0]);
@@ -818,6 +863,12 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 	}
 	else {
 		path = folderInode;
+	}
+
+	if (JudgePermission(path, 1) == false)
+	{
+		cout << "rm: permission denied!" << endl;
+		return;
 	}
 
 	bool haveSuchAFile = false; // 判断是否有要删除的文件
@@ -870,7 +921,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 			// 若blockNum数量<=10，则说明是在10个直接块中存储的数据
 			for (int j = 0; j < min(blockNum, 10); j++) {
 				int blockID = path->DataBlockIndex0[j];
-				memset(&disk.data[blockID], 0, sizeof(block));
+				::memset(&disk.data[blockID], 0, sizeof(block));
 				FreeABlock(disk, blockID);
 			}
 			// 若blockNum数量>10，则说明使用了一级间址
@@ -879,7 +930,7 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 				for (int j = 10; j < min(blockNum, 128 + 10); j++)
 				{
 					int blockID = dataBlockIndexFile.index[j - 10];
-					memset(&disk.data[blockID], 0, sizeof(block));
+					::memset(&disk.data[blockID], 0, sizeof(block));
 					FreeABlock(disk, blockID);
 				}
 			}
@@ -995,9 +1046,17 @@ inode* getInodeByPathName(const char* folderPathName, inode* nowPath, int mode) 
 
 bool Chmod(char* pathname, int permission,inode*nowpath)
 {
+	
 	inode* Inode = getInodeByPathName(pathname, nowpath, 1);
 	if (Inode != NULL)
 	{
+
+		if (JudgePermission(Inode, 1) == false)
+		{
+			cout << "rm: permission denied!" << endl;
+			return false;
+		}
+
 		return Chmod(Inode, permission);
 		
 	}
@@ -1022,8 +1081,15 @@ int complier(char* filename,inode* NowPath,Disk&disk)
 {
 	inode* FileInode = getInodeByPathName(filename,NowPath,1);
 	inode*folderInode= getInodeByPathName(filename, NowPath,2);
+
 	if (FileInode != NULL)
 	{
+		if (JudgePermission(folderInode, 1) == false)
+		{
+			cout << "complier: permission denied!" << endl;
+			return -1;
+		}
+
 		File* file = OpenFile(disk, FileInode);
 		char name[NameLen + 1 + NameLen];
 		sprintf_s(name, "%s.%s", FileInode->Name, FileInode->ExtensionName);
@@ -1078,17 +1144,17 @@ void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
 	
 	if (indexR[0] != -1)
 	{
-		memset(Arr1, 0, MAXPATH_LEN);
+		::memset(Arr1, 0, MAXPATH_LEN);
 		memcpy(Arr1, Arr + indexL[0], (indexR[0] - indexL[0] + 1) * sizeof(char));
 	}
 	if (indexR[1] != -1)
 	{
-		memset(Arr2, 0, MAXPATH_LEN);
+		::memset(Arr2, 0, MAXPATH_LEN);
 		memcpy(Arr2, Arr + indexL[1], (indexR[1] - indexL[1] + 1) * sizeof(char));
 	}
 	if (indexR[2] != -1)
 	{
-		memset(Arr3, 0, MAXPATH_LEN);
+		::memset(Arr3, 0, MAXPATH_LEN);
 		memcpy(Arr3, Arr + indexL[2], (indexR[2] - indexL[2] + 1) * sizeof(char));
 	}
 
@@ -1128,8 +1194,8 @@ bool Export(char* filepathname, char* pathnameInWindows)
 */
 void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName)
 {
-	memset(FileName, 0, strlen(FileName));
-	memset(ExtensionName, 0, strlen(ExtensionName));
+	::memset(FileName, 0, strlen(FileName));
+	::memset(ExtensionName, 0, strlen(ExtensionName));
 	if (strcmp(AllName, "..") == 0| strcmp(AllName, ".") == 0)
 	{
 		memcpy(FileName, AllName, strlen(AllName));
@@ -1169,6 +1235,12 @@ void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionN
 
 bool Import(char* pathnameInWindows, inode* folderInode)
 {
+	if (JudgePermission(folderInode, 0) == false)
+	{
+		cout << "import: permission denied!" << endl;
+		return false;
+	}
+
 	//读取全部数据到新的File
 	FILE* In =new  FILE;
 	fopen_s(&In, pathnameInWindows, "r");
@@ -1212,6 +1284,15 @@ bool Rename(char* filenameandpath, char* name)
 	{
 		return false;
 	}
+
+	//权限判断
+	if (JudgePermission(FileInode, 1) == false)
+	{
+		cout << "rename: permission denied!" << endl;
+		return false;
+	}
+
+
 	char FileName[NameLen] = { 0 };
 	char ExtensionName[NameLen] = { 0 };
 	GetFileNameAndExtensionName(name, FileName, ExtensionName);
@@ -1225,6 +1306,8 @@ void MV(inode* NowPath, char* fileName, char* targetName) {
 	inode* fileLastPath = getInodeByPathName(fileName, NowPath, 2);
 	inode* targetPath = getInodeByPathName(targetName, NowPath);
 	//inode* targetLastPath = getInodeByPathName(targetName, NowPath, 2);
+	
+
 
 	if (filePath == NULL || targetPath == NULL) {
 		cout << "mv: 无法将\"" << fileName << "\" 移动至\"" << targetName << "\": 没有那个文件或目录" << endl;
@@ -1232,6 +1315,19 @@ void MV(inode* NowPath, char* fileName, char* targetName) {
 	}
 	if (strcmp(targetPath->ExtensionName, "folder") != 0) {
 		cout << "mv: \"" << targetName << "\" 应该为目录" << endl;
+		return;
+	}
+
+	//权限判断
+	if (JudgePermission(filePath, 1) == false)
+	{
+		cout << "mv: permission denied!" << endl;
+		return;
+	}
+	//权限判断
+	if (JudgePermission(targetPath, 1) == false)
+	{
+		cout << "mv: permission denied!" << endl;
 		return;
 	}
 	// 移动
@@ -1264,6 +1360,20 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 		cout << "cp: \"" << targetName << "\" 应该为目录" << endl;
 		return;
 	}
+
+	//权限判断
+	if (JudgePermission(fileInode, 0) == false)
+	{
+		cout << "cp: permission denied!" << endl;
+		return;
+	}
+	//权限判断
+	if (JudgePermission(targetInode, 1) == false)
+	{
+		cout << "Rename: permission denied!" << endl;
+		return;
+	}
+
 	// 移动
 	char FileName[NameLen] = { 0 };
 	char ExtensionName[NameLen] = { 0 };
@@ -1289,17 +1399,18 @@ void Format()
 {
 	if (strcmp(NowUser, "root") != 0)
 	{
-		cout << "权限不足，请切换成root用户后使用该命令" << endl;
+		cout << "format: permission denied!\ntry: su root " << endl;
+
 		return;
 	}
 	//格式化磁盘文件
-	memset(&disk, 0, sizeof(disk));
+	::memset(&disk, 0, sizeof(disk));
 	//格式化超级块
-	memset(&SuperBlock, 0, sizeof(SuperBlock));
+	::memset(&SuperBlock, 0, sizeof(SuperBlock));
 	//格式化Inode节点
-	memset(Inode, 0, sizeof(Inode));
+	::memset(Inode, 0, sizeof(Inode));
 	//格式化位图
-	memset(InodeBitmap, 0, sizeof(InodeBitmap));
+	::memset(InodeBitmap, 0, sizeof(InodeBitmap));
 	lastInodePos = 0;
 	NowPath = &Inode[SuperBlock.firstInode];
 	RootPath = &Inode[SuperBlock.firstInode];
@@ -1307,6 +1418,7 @@ void Format()
 	isLogin = false;
 	memcpy(NowPathName, "/", 2);
 	memcpy(NowUser, "root", 5);
+	memcpy(NowGroupName, "root", 5);
 	memcpy(DeviceName, "Disk0", 6);
 
 	initInode();//初始化inode
@@ -1352,6 +1464,7 @@ bool Logout()
 
 bool useradd(char* name,Disk&disk)
 {
+	
 	//名字不能为空
 	if (strlen(name) == 0)
 	{
@@ -1360,6 +1473,11 @@ bool useradd(char* name,Disk&disk)
 
 	//不能重名
 	User user = LoadUserFromDisk(disk);
+	if (user.userSum >= 8)
+	{
+		cout << "useradd:用户已满，无法继续注册" << endl;
+		return false;
+	}
 	bool isNameUsed = false;
 	for (int i = 0; i < user.userSum; i++)
 	{
@@ -1374,7 +1492,8 @@ bool useradd(char* name,Disk&disk)
 		return false;
 	}
 	strcpy_s(user.name[user.userSum], name);
-	memset(user.password[user.userSum], 0, sizeof(char) * PassWordLen);
+	strcpy_s(user.GroupName[user.userSum], name);
+	::memset(user.password[user.userSum], 0, sizeof(char) * PassWordLen);
 	user.userSum++;
 	SaveUserToDisk(disk, user);
 
@@ -1486,7 +1605,7 @@ void passwd(char* username,Disk&disk)
 char* GetPasswd()
 {
 	char* Password = (char*)malloc(sizeof(char) * PassWordLen);
-	memset(Password, 0, sizeof(char) * PassWordLen);
+	::memset(Password, 0, sizeof(char) * PassWordLen);
 	while (1)
 	{
 		char ch = _getch();
@@ -1513,4 +1632,90 @@ char* GetPasswd()
 		}
 	}
 	return Password;
+}
+
+
+//判断是否可执行操作 可以执行返回true
+// file待判断的文件
+// mode 模式 0 读 1 写 2 执行
+// 读 写 执行
+// r=4  w=2   x=1  
+bool JudgePermission(inode* file, int mode)
+{
+
+	int nowPermision = 0;
+	if (strcmp(NowUser, file->username) == 0)
+	{
+		nowPermision = file->permissions / 100;
+	}
+	else if (strcmp(NowGroupName, file->usergroupname) == 0)
+	{
+		nowPermision = file->permissions / 10;
+		nowPermision = nowPermision % 10;
+	}
+	else
+	{
+		nowPermision = file->permissions % 10;
+	}
+	char wantPermision = pow(2, mode);
+	char cPermision = nowPermision;
+
+	if ((cPermision &wantPermision) != 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
+}
+
+//切换用户
+void su(char* username)
+{
+	if (strcmp(NowUser, "root") == 0)
+	{
+		strcpy_s(NowUser, username);
+		User user = LoadUserFromDisk(disk);
+		for (int i = 0; i < user.userSum; i++)
+		{
+			if (strcmp(username, user.name[i]) == 0)
+			{
+				strcpy_s(NowGroupName, user.GroupName[i]);
+			}
+		}
+	}
+	else
+	{
+		cout << "password:";
+		char Password[PassWordLen] = { 0 };
+		strcpy_s(Password, GetPasswd());
+		User user = LoadUserFromDisk(disk);
+		for (int i = 0; i < user.userSum; i++)
+		{
+			if (strcmp(username, user.name[i]) == 0)
+			{
+				if (strcmp(Password, user.password[i]) == 0)
+				{
+					strcpy_s(NowUser, username);
+					strcpy_s(NowGroupName, user.GroupName[i]);
+				}
+				else
+				{
+					SetConsoleTextAttribute(CommandLineHandle, FOREGROUND_RED);
+					cout << "su: su failed!" << endl;
+					SetConsoleTextAttribute(CommandLineHandle, 0x07);
+				}
+			}
+		}
+		cout << endl;
+	}
+}
+
+
+void WrongCommand(char *Arr1)
+{
+	cout << "Command '" << Arr1 << "' not found" << endl;
+	cout << "Try:help " << endl;
 }

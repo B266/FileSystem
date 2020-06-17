@@ -34,11 +34,14 @@ int main()
 	//cout << sizeof(char)* NameLen << endl;
 	//cout << "block: " << sizeof(block) << endl;
 	//cout << "inode: " << sizeof(inode) << endl;
-
+	cout << sizeof(User) << endl;
 
 
 	while (1)
 	{
+
+
+
 		UserManager(disk);
 
 		ShowNowPathInfo();
@@ -146,6 +149,14 @@ int main()
 		else if (strcmp(Arr1, "passwd") == 0)
 		{
 			passwd(Arr2, disk);
+		}
+		else if (strcmp(Arr1, "su") == 0)
+		{
+			su(Arr2);
+		}
+		else
+		{
+			WrongCommand(Arr1);
 		}
 		
 	}
