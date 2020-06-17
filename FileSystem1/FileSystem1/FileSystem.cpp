@@ -349,7 +349,7 @@ void InitRootFolder()
 
 	strcpy_s(Inode[SuperBlock.firstInode].username, NowUser);
 	strcpy_s(Inode[SuperBlock.firstInode].usergroupname, NowGroupName);
-	Inode[SuperBlock.firstInode].permissions = 777;
+	Inode[SuperBlock.firstInode].permissions = 755;
 	SaveFolderToBlock(disk, Inode[SuperBlock.firstInode].DataBlockIndex0[0], rootF);
 
 }
@@ -634,7 +634,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 	
 }
 
-void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
+bool NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 {
 
 	Folder folderBlock;
@@ -648,19 +648,19 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 		inode* haveSameNameFolder = getInodeByPathName(FileName, targetInode);
 		if (haveSameNameFolder != NULL) {
 			cout << "mkdir: 无法创建\"" << FileName << "\": 有同名文件已存在" << endl;
-			return;
+			return false;
 		}
 		::memcpy(folderName, FileName, strlen(FileName) + 1);
 	}
 	else {
-		return;
+		return false;
 	}
 
 	//权限判断
 	if (JudgePermission(targetInode, 1) == false)
 	{
 		cout << "mkdir: permission denied!" << endl;
-		return;
+		return false;
 	}
 
 
@@ -685,6 +685,8 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 
 	//修改上级目录
 	AddItemInFolder(targetInode, folderName, inodeId);
+
+	return true;
 
 }
 
@@ -1554,8 +1556,12 @@ bool useradd(char* name,Disk&disk)
 	::memset(user.password[user.userSum], 0, sizeof(char) * PassWordLen);
 	user.userSum++;
 	SaveUserToDisk(disk, user);
-
-	NewFolder(disk, RootPath, name);
+	if (NewFolder(disk, RootPath, name) == false)
+	{
+		inode *folderInode = getInodeByPathName(name, RootPath, 1);
+		strcpy_s(folderInode->username, user.name[user.userSum - 1]);
+		strcpy_s(folderInode->usergroupname, user.GroupName[user.userSum - 1]);
+	}
 	return true;
 
 
