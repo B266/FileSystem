@@ -63,7 +63,7 @@ struct inode {  //128byte
 	char ExtensionName[NameLen] = { 0 };
 	char username[14];						//文件所属用户
 	char usergroupname[14];						//文件所属用户组
-	int permissions = 0;
+	int permissions = 755;
 
 	int size;
 
@@ -236,6 +236,8 @@ void ShowNowPathInfo();
 void SetTitle(const char* Title);
 
 void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3);
+
+char* GetPasswd();
 
 
 // 获取字符串的文件名和扩展名

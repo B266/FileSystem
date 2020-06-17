@@ -282,6 +282,7 @@ void SaveDisk()
 	out.write(buffer, sizeof(disk));
 	out.close();
 	free(buffer);
+	cout << "save: save disk successfully" << endl;
 }
 
 
@@ -298,7 +299,7 @@ void LoadDisk()
 
 	LoadSuperBlockFromDisk(SuperBlock, disk);
 	LoadInodeFromDisk(*InodeBitmap, *Inode, disk);
-	
+	cout << "load: load disk successfully" << endl;
 }
 
 
@@ -1277,6 +1278,11 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 
 void Format()
 {
+	if (strcmp(NowUser, "root") != 0)
+	{
+		cout << "权限不足，请切换成root用户后使用该命令" << endl;
+		return;
+	}
 	//格式化磁盘文件
 	memset(&disk, 0, sizeof(disk));
 	//格式化超级块
@@ -1388,25 +1394,29 @@ void UserManager(Disk &disk)
 		{
 			break;
 		}
+		SetConsoleTextAttribute(CommandLineHandle, FOREGROUND_GREEN);
 		cout << "login as: ";
+		SetConsoleTextAttribute(CommandLineHandle, 0x07);
 		char name[NameLen];
 		cin.getline(name,NameLen);
+		SetConsoleTextAttribute(CommandLineHandle, FOREGROUND_GREEN);
 		cout << name << "@" << DeviceName << "'s password:";
-		char password[PassWordLen];
-		cin.getline(password, PassWordLen);
-		Login(name, password, disk);
+		SetConsoleTextAttribute(CommandLineHandle, 0x07);
+		char* password = GetPasswd();
+		cout << endl;
+		if (Login(name, password, disk) == false)
+		{
+			SetConsoleTextAttribute(CommandLineHandle, FOREGROUND_RED);
+			cout << "Login: login failed!"<<endl;
+			SetConsoleTextAttribute(CommandLineHandle, 0x07);
+		}
 	}
 }
 
 bool useradd()
 {
 	char name[NameLen] = { 0 };
-	char password[PassWordLen] = { 0 };
-	char password1[PassWordLen] = { 0 };
 	cin.getline(name,NameLen);
-
-	cin.getline(password, PassWordLen);
-	cin.getline(password1, PassWordLen);
 
 	useradd(name,disk);
 	return true;
@@ -1434,13 +1444,16 @@ void passwd(char* username,Disk&disk)
 			SetConsoleTextAttribute(CommandLineHandle, 0x07);
 			char passowrdOld[PassWordLen] = { 0 };
 			cout << "(current) password:";
-			cin.getline( passowrdOld,PassWordLen);
+			strcpy_s(passowrdOld, GetPasswd());
+			cout << endl;
 			char passwordNew[PassWordLen] = { 0 };
 			cout << "Enter new password:";
-			cin.getline( passwordNew,PassWordLen);
+			strcpy_s(passwordNew, GetPasswd());
+			cout << endl;
 			char passwordNew1[PassWordLen] = { 0 };
 			cout << "Retype new password:";
-			cin.getline( passwordNew1,PassWordLen);
+			strcpy_s(passwordNew1, GetPasswd());
+			cout << endl;
 			if (strcmp(passowrdOld, user.password[i]) != 0)
 			{
 				cout << "passwd: old password wrong! password update failed" << endl;
@@ -1459,4 +1472,27 @@ void passwd(char* username,Disk&disk)
 		}
 	}
 	SaveUserToDisk(disk, user);
+}
+
+char* GetPasswd()
+{
+	char* Password = (char*)malloc(sizeof(char) * PassWordLen);
+	memset(Password, 0, sizeof(char) * PassWordLen);
+	while (1)
+	{
+		char ch = _getch();
+		if (ch == '\n'||ch=='\r')
+		{
+			break;
+		}
+		if (strlen(Password) < PassWordLen)
+		{
+			memcpy(Password + strlen(Password), &ch, sizeof(char));
+		}
+		else
+		{
+			break;
+		}
+	}
+	return Password;
 }
