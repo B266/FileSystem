@@ -1416,14 +1416,19 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	}
 	// 原路径为文件夹
 	if (strcmp(fileInode->ExtensionName, "folder") == 0) {
-		Folder* newFolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
-		int indexInode = GetAInode();
-		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
-		int indexBlock = GetOneBlock(disk);
-		//SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
-		SaveFolderToBlock(disk, indexBlock, *newFolder);
-		AddItemInFolder(targetInode, FileName, indexInode);
+		//Folder* newFolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
+		//int indexInode = GetAInode();
+		//memcpy(&Inode[indexInode], fileInode, sizeof(inode));
+		//int indexBlock = GetOneBlock(disk);
+
+		////SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
+
+		//SaveFolderToBlock(disk, indexBlock, *newFolder);
+		//AddItemInFolder(targetInode, FileName, indexInode);
+
 		//inode* folderInode = getInodeByPathName(fileName, targetInode);
+
+		NewFolder(disk, targetInode, FileName);
 
 		Folder* nowfolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
 		char newTargetName[MAXPATH_LEN];
