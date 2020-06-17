@@ -688,17 +688,10 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 
 }
 
-void LS(char* folderPathName)
-{
-	inode* nowFolderInode = getInodeByPathName(folderPathName);
 
-	if (strcpy_s(nowFolderInode->ExtensionName, "folder") == 0)
-	{
-		LS(nowFolderInode);
-	}
-}
 
-void LS(inode* FolderInode)
+//mode 0 ËõÂÔ°æ 1 ÏêÏ¸°æ
+void LS(inode* FolderInode, int mode)
 {
 	//È¨ÏÞÅÐ¶Ï
 	if (JudgePermission(FolderInode, 0) == false)
@@ -712,16 +705,25 @@ void LS(inode* FolderInode)
 
 	for (int i = 2; i < folder->itemSum; i++)
 	{
-		
+
 		if (strcmp(Inode[folder->index[i]].ExtensionName, "folder") == 0)
 		{
 			SetConsoleTextAttribute(CommandLineHandle, 0x09);
 			cout << folder->name[i] << "\t";
+			if (mode == 1)
+			{
+				cout << folder->index[i] << "\t";
+			}
 			SetConsoleTextAttribute(CommandLineHandle, 0x0f);
+
 		}
 		else
 		{
-			cout << folder->name[i]<<"."<<Inode[folder->index[i]].ExtensionName << "\t";
+			cout << folder->name[i] << "." << Inode[folder->index[i]].ExtensionName << "\t";
+			if (mode == 1)
+			{
+				cout << folder->index[i] << "\t";
+			}
 		}
 
 	}
@@ -730,6 +732,30 @@ void LS(inode* FolderInode)
 		cout << endl;
 	}
 
+}
+
+
+void LS(char* folderPathName, char* mode)
+{
+	
+	inode* nowFolderInode = getInodeByPathName(folderPathName);
+	if (nowFolderInode == NULL)
+	{
+		nowFolderInode = NowPath;
+	}
+
+	if (strcpy_s(nowFolderInode->ExtensionName, "folder") == 0)
+	{
+		if (strcmp(folderPathName, "-i") == 0 || strcmp(mode, "-i") == 0)
+		{
+			LS(nowFolderInode, 1);
+		}
+		else
+		{
+			LS(nowFolderInode, 0);
+		}
+		
+	}
 }
 
 void CutPath(char* name)

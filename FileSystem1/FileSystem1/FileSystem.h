@@ -220,8 +220,8 @@ TextBlock* LoadTextBlockFromDisk(Disk& disk, int index);
 void NewTxt(inode* FolderInode);
 void ShowText(char *pathName, inode* nowpath);
 void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
-void LS(inode* Inode);
-void LS(char* folderPathName);
+
+void LS(char* folderPathName,char *mode);
 void CD(char* name, inode** nowpath);
 void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder); // É¾³ýÎÄ¼þ
 bool Chmod(inode* Inode, int permission);

@@ -62,13 +62,7 @@ int main()
 		}
 		else if (strcmp(Arr1, "ls") == 0)
 		{
-			if (strlen(Arr2) > 0)
-			{
-				LS(Arr2);
-			}
-			else {
-				LS(NowPath);
-			}
+			LS(Arr2, Arr3);
 			
 		}
 		else if (strcmp(Arr1, "new") == 0)
