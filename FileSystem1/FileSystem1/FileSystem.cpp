@@ -11,6 +11,7 @@ inode* NowPath = &Inode[SuperBlock.firstInode];
 inode* RootPath = &Inode[SuperBlock.firstInode];
 char NowPathName[MAXPATH_LEN] = "/";
 char NowUser[MAXUSERNAME_LEN] = "root";
+char NowGroupName[NameLen] = "root";
 char DeviceName[MAXDEVICENAME_LEN] = "Disk0";
 
 bool isLogin = false;
@@ -393,9 +394,12 @@ void NewTxt(inode* FolderInode)
 	cin >> name;
 	
 
-
+	//填写inode
 	strcpy_s(Inode[indexInode].Name, name);
 	strcpy_s(Inode[indexInode].ExtensionName, "txt");
+	strcpy_s(Inode[indexInode].username, NowUser);
+	strcpy_s(Inode[indexInode].usergroupname, NowGroupName);
+	Inode[indexInode].permissions = 666;
 	getchar();
 	getchar();
 	const int maxsize = 99999;
@@ -643,9 +647,14 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 	folderBlock.index[1] = inodeId;
 
 	int blockId = GetOneBlock(disk);
+
+	//填写inode的信息
 	strcpy_s(Inode[inodeId].Name, folderName);
 	Inode[inodeId].DataBlockIndex0[0] = blockId;
 	strcpy_s(Inode[inodeId].ExtensionName, "folder");
+	strcpy_s(Inode[inodeId].username, NowUser);
+	strcpy_s(Inode[inodeId].usergroupname, NowGroupName);
+	Inode[inodeId].permissions = 777;
 	SaveFolderToBlock(disk, blockId, folderBlock);
 
 	//修改上级目录
@@ -1485,10 +1494,19 @@ char* GetPasswd()
 		{
 			break;
 		}
-		if (strlen(Password) < PassWordLen)
+		else if (ch == '\b') //退格
+		{
+			if (strlen(Password) > 0)
+			{
+				Password[strlen(Password) - 1] = '\0';
+			}
+			
+		}
+		else if (strlen(Password) < PassWordLen)
 		{
 			memcpy(Password + strlen(Password), &ch, sizeof(char));
 		}
+
 		else
 		{
 			break;
