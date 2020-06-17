@@ -1237,7 +1237,7 @@ void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionN
 
 bool Import(char* pathnameInWindows, inode* folderInode)
 {
-	if (JudgePermission(folderInode, 0) == false)
+	if (JudgePermission(folderInode, 1) == false)
 	{
 		cout << "import: permission denied!" << endl;
 		return false;
@@ -1644,7 +1644,10 @@ char* GetPasswd()
 // r=4  w=2   x=1  
 bool JudgePermission(inode* file, int mode)
 {
-
+	if (strcmp(NowUser, "root") == 0)
+	{
+		return true;
+	}
 	int nowPermision = 0;
 	if (strcmp(NowUser, file->username) == 0)
 	{
@@ -1718,6 +1721,10 @@ void su(char* username)
 
 void WrongCommand(char *Arr1)
 {
-	cout << "Command '" << Arr1 << "' not found" << endl;
-	cout << "Try:help " << endl;
+	if (strlen(Arr1) != 0)
+	{
+		cout << "Command '" << Arr1 << "' not found" << endl;
+		cout << "Try:help " << endl;
+	}
+	
 }
