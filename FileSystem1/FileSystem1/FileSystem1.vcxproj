@@ -149,8 +149,8 @@
   <ItemGroup>
     <ClInclude Include="cminicomplier.h" />
     <ClInclude Include="FileSystem.h" />
-    <ClInclude Include="tm.h" />
     <ClInclude Include="simple_vim.h" />
+    <ClInclude Include="tm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

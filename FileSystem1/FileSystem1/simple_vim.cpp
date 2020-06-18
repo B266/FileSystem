@@ -422,7 +422,7 @@ label:
 		}
 	}
 
-	cout << "当前buf内容：" << buf << endl;
+	//cout << "当前buf内容：" << buf << endl;
 	// 将buf内容写回文件的磁盘块
 	SaveFileData(disk, fileInode, buf, strlen(buf));
 
