@@ -8,7 +8,9 @@
 #include<wchar.h>
 #include<conio.h> //for getch()
 
+
 #include"cminicomplier.h"
+#include"tm.h"
 
 
 
@@ -30,6 +32,7 @@ const int DataBlockSum = InodeSum;//数据块的数量
 const int DiskBlockSum = 1 + InodeBitMapBlockSum + InodeBlockSum +1+ DataBlockSum;//虚拟磁盘块总数：超级块+inode位图+inode块+用户块+数据块[第一块为用户数据块]
 
 
+const int MaxFileSize = 8500000;
 const int InodeBitmapBlockStart = 1;
 const int InodeBlockStart = 1 + InodeBitMapBlockSum;
 const int UserBlockStart = 1 + InodeBitMapBlockSum + InodeBlockSum;
@@ -238,7 +241,7 @@ void su(char* username);
 bool Import(char* pathnameInWindows, inode* NowPath);
 void Format();
 
-
+int tm_f(char* filename, inode* NowPath, Disk& disk);
 int complier(char* filename, inode* NowPath, Disk& disk);
 void MV(inode* NowPath, char* filePath, char* targetPath);
 void CP(inode* NowPath, char* filePath, char* targetPath);

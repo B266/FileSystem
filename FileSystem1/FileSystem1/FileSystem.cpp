@@ -413,17 +413,19 @@ void NewTxt(inode* FolderInode)
 	Inode[indexInode].permissions = 666;
 	getchar();
 	getchar();
-	const int maxsize = 99999;
+
 
 	//写入自己的datablock
-	char text[maxsize] = { 0 };
+	char* text = new char[MaxFileSize];
+	memset(text, 0, MaxFileSize * sizeof(char));
 	
 	cout << "data:";
+	const int MaxLineSize = MaxFileSize / 100;
 
 	while (1)
 	{
-		char lineBuffer[99999] = { 0 };
-		cin.getline(lineBuffer, 99999);
+		char lineBuffer[MaxLineSize] = { 0 };
+		cin.getline(lineBuffer, MaxLineSize);
 		if (strcmp(lineBuffer, ":q") == 0)
 		{
 			break;
@@ -436,7 +438,7 @@ void NewTxt(inode* FolderInode)
 
 	SaveFileData(disk, &Inode[indexInode], text, strlen(text));
 
-	
+	delete[]text;
 	//修改上级目录
 	AddItemInFolder(FolderInode, name, indexInode);
 
@@ -475,10 +477,43 @@ void ShowText(char* pathName, inode* nowpath)
 
 
 	File* openFile = OpenFile(disk, fileinode);
-	
 	cout << "filename:" << fileinode->Name << endl;
+	cout << "ExtensionName:" << fileinode->ExtensionName << endl;
 	cout << "data:" << endl;
-	cout << openFile->data;
+
+	if (strcmp(fileinode->ExtensionName, "txt") == 0||strcmp(fileinode->ExtensionName,"c")==0||strcmp(fileinode->ExtensionName,"tm")==0)
+	{
+		//输出ascii模式
+		cout << strlen(openFile->data) << endl;
+		cout << openFile->dataSize << endl;
+		
+
+		cout << openFile->data << endl;
+
+
+	}
+	else
+	{
+		//输出十六进制
+		cout << "index\tdata" << endl;
+		int linesize = 32;
+		for (int i = 0; i < openFile->dataSize; i++)
+		{
+			if (i % linesize == 0)
+			{
+				cout << endl;
+				cout << i << "\t";
+			}
+			char buffer[3] = { 0 };
+			unsigned char ch = openFile->data[i];
+			sprintf_s(buffer, "%02x", ch);
+			
+			cout << buffer <<" ";
+			
+
+		}
+		cout << endl;
+	}
 
 	
 }
@@ -539,7 +574,7 @@ File* OpenFile(Disk &disk, inode* fileInode)
 
 void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 {
-	fileInode->size = strlen(data);
+	fileInode->size = datasize;
 
 	int dataOneBlock = (sizeof(block) - sizeof(int));
 	int blockSize = fileInode->size / dataOneBlock + 1;
@@ -612,6 +647,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
 			dataBlockIndexFile2.index[t] = dataBlockIndexFileIndex;
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile2, disk, dataBlockIndex2FileIndex);
+			fileInode->DataBlockIndex2 = dataBlockIndex2FileIndex;
 		}
 		else
 		{
@@ -629,6 +665,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
 			dataBlockIndexFile2.index[0] = dataBlockIndexFileIndex;
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile2, disk, dataBlockIndex2FileIndex);
+			fileInode->DataBlockIndex2 = dataBlockIndex2FileIndex;
 		}
 	}
 	
@@ -781,16 +818,17 @@ void CD(char* name, inode** nowpath)
 {
 	inode** path = nowpath; // 备份nowpath
 	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
-		//权限判断
-	if (JudgePermission(targetpath, 0) == false)
-	{
-		cout << "cd: permission denied!" << endl;
-		return;
-	}
+
 	//权限判断
 
 	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
 	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
+		//权限判断
+		if (JudgePermission(targetpath, 0) == false)
+		{
+			cout << "cd: permission denied!" << endl;
+			return;
+		}
 		*nowpath = targetpath;
 		char path[10][20]; // 最多10层路径
 		int i = 0, pathNum = 0, k = 0;
@@ -1181,6 +1219,23 @@ int complier(char* filename,inode* NowPath,Disk&disk)
 	return 0;
 }
 
+int tm_f(char* filename, inode* NowPath,Disk& disk) {
+	inode* FileInode = getInodeByPathName(filename, NowPath, 1);
+	inode* folderInode = getInodeByPathName(filename, NowPath, 2);
+	if (FileInode != NULL)
+	{
+		if (JudgePermission(folderInode, 0) == false)
+		{
+			cout << "complier: permission denied!" << endl;
+			return -1;
+		}
+		File* file = OpenFile(disk, FileInode);
+		tm_c(file->data);
+	}
+	return 0;
+}
+
+
 
 void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
 {
@@ -1314,7 +1369,7 @@ bool Import(char* pathnameInWindows, inode* folderInode)
 
 	//读取全部数据到新的File
 	FILE* In =new  FILE;
-	fopen_s(&In, pathnameInWindows, "r");
+	fopen_s(&In, pathnameInWindows, "rb");
 	if (In == NULL)
 	{
 		return NULL;
@@ -1538,6 +1593,7 @@ bool Login(char* name, char* password,Disk&disk)
 			{
 				isLogin = true;
 				strcpy_s(NowUser, name);
+
 				return true;
 			}
 		}
@@ -1786,8 +1842,10 @@ void su(char* username)
 			if (strcmp(username, user.name[i]) == 0)
 			{
 				strcpy_s(NowGroupName, user.GroupName[i]);
+				
 			}
 		}
+		
 	}
 	else
 	{
@@ -1803,6 +1861,7 @@ void su(char* username)
 				{
 					strcpy_s(NowUser, username);
 					strcpy_s(NowGroupName, user.GroupName[i]);
+
 				}
 				else
 				{

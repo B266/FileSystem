@@ -106,6 +106,10 @@ int main()
 		{
 			complier(Arr2, NowPath, disk);
 		}
+		else if (strcmp(Arr1, "tm") == 0)
+		{
+			tm_f(Arr2, NowPath, disk);
+		}
 		else if (strcmp(Arr1, "export") == 0)
 		{
 			Export(Arr2, Arr3);
