@@ -8,7 +8,9 @@
 #include<wchar.h>
 #include<conio.h> //for getch()
 
+
 #include"cminicomplier.h"
+#include"tm.h"
 
 
 
@@ -238,7 +240,7 @@ void su(char* username);
 bool Import(char* pathnameInWindows, inode* NowPath);
 void Format();
 
-
+int tm_f(char* filename, inode* NowPath, Disk& disk);
 int complier(char* filename, inode* NowPath, Disk& disk);
 void MV(inode* NowPath, char* filePath, char* targetPath);
 void CP(inode* NowPath, char* filePath, char* targetPath);

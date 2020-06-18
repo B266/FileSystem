@@ -612,6 +612,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
 			dataBlockIndexFile2.index[t] = dataBlockIndexFileIndex;
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile2, disk, dataBlockIndex2FileIndex);
+			fileInode->DataBlockIndex2 = dataBlockIndex2FileIndex;
 		}
 		else
 		{
@@ -629,6 +630,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
 			dataBlockIndexFile2.index[0] = dataBlockIndexFileIndex;
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile2, disk, dataBlockIndex2FileIndex);
+			fileInode->DataBlockIndex2 = dataBlockIndex2FileIndex;
 		}
 	}
 	
@@ -1137,6 +1139,23 @@ int complier(char* filename,inode* NowPath,Disk&disk)
 	}
 	return 0;
 }
+
+int tm_f(char* filename, inode* NowPath,Disk& disk) {
+	inode* FileInode = getInodeByPathName(filename, NowPath, 1);
+	inode* folderInode = getInodeByPathName(filename, NowPath, 2);
+	if (FileInode != NULL)
+	{
+		if (JudgePermission(folderInode, 0) == false)
+		{
+			cout << "complier: permission denied!" << endl;
+			return -1;
+		}
+		File* file = OpenFile(disk, FileInode);
+		tm_c(file->data);
+	}
+	return 0;
+}
+
 
 
 void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
