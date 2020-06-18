@@ -1,5 +1,6 @@
 
 #include"FileSystem.h"
+#include "simple_vim.h"
 
 using namespace std;
 HANDLE CommandLineHandle;
@@ -147,6 +148,9 @@ int main()
 		else if (strcmp(Arr1, "su") == 0)
 		{
 			su(Arr2);
+		}
+		else if (strcmp(Arr1, "vim") == 0) {
+			vim(NowPath, Arr2);
 		}
 		else
 		{

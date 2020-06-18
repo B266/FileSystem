@@ -143,10 +143,12 @@
     <ClCompile Include="Format.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="simple_vim.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cminicomplier.h" />
     <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="simple_vim.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
