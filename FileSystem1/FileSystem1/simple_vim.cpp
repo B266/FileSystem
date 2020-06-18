@@ -22,21 +22,19 @@ void vim(inode* nowPath, char* fileName) {
 	// 新建文件
 	if (fileInode == NULL && fatherFolderInode != NULL) {
 		int indexInode = GetAInode();
-		char text[99999] = { 0 };
+		char FileName[NameLen] = { 0 };
+		char ExtensionName[NameLen] = { 0 };
+		GetFileNameAndExtensionName(fileName, FileName, ExtensionName);
 		//填写inode
-		strcpy_s(Inode[indexInode].Name, fileName);
-		strcpy_s(Inode[indexInode].ExtensionName, "txt");
+		strcpy_s(Inode[indexInode].Name, FileName);
+		strcpy_s(Inode[indexInode].ExtensionName, ExtensionName);
 		strcpy_s(Inode[indexInode].username, NowUser);
 		strcpy_s(Inode[indexInode].usergroupname, NowGroupName);
 		Inode[indexInode].size = 0;
 		Inode[indexInode].permissions = 666;
-		////添加换行符
-		//char n = '\n';
-		//::memcpy(text + strlen(text), &n, 1);
-		//SaveFileData(disk, &Inode[indexInode], text, strlen(text));
 
 		//修改上级目录
-		AddItemInFolder(fatherFolderInode, fileName, indexInode);
+		AddItemInFolder(fatherFolderInode, FileName, indexInode);
 
 		fileInode = &Inode[indexInode];
 	}
@@ -47,7 +45,6 @@ void vim(inode* nowPath, char* fileName) {
 	int maxlen = 0; // 达到过的最大长度
 	char buf[99999];	//最大100K
 
-label:
 	//初始化vi
 	int cnt = 0;
 	system("cls");	//清屏
@@ -62,38 +59,8 @@ label:
 	int i = 0;
 	int sumlen = fileInode->size;	//文件长度
 	int getlen = 0;	//取出来的长度
-	//for (i = 0; i < 10; i++) {
-	//	char fileContent[1000] = { 0 };
-	//	if (fileInode->DataBlockIndex0[i] == NULL) {
-	//		continue;
-	//	}
-	//	//依次取出磁盘块的内容
-	//	fseek(fr, fileInode->DataBlockIndex0[i], SEEK_SET);
-	//	fread(fileContent, superblock->s_BLOCK_SIZE, 1, fr);	//读取出一个磁盘块大小的内容
-	//	fflush(openFile);
-	//	//输出字符串
-	//	int curlen = 0;	//当前指针
-	//	while (curlen < superblock->s_BLOCK_SIZE) {
-	//		if (getlen >= sumlen)	//全部输出完毕
-	//			break;
-	//		printf("%c", fileContent[curlen]);	//输出到屏幕 
-	//		buf[cnt++] = fileContent[curlen];	//输出到buf
-	//		curlen++;
-	//		getlen++;
-	//	}
-	//	if (getlen >= sumlen)
-	//		break;
-	//}
-	//maxlen = sumlen;
-	// 把多余的换行符去掉
-	int fileSize = strlen(openFile->data);
-	/*while (openFile->data[fileSize - 1] == '\n' && fileSize >= 1) {
-		openFile->data[strlen(openFile->data) - 1] = '\0';
-		fileSize--;
-	}*/
-	cnt = fileSize;
 
-	cout << openFile->data;
+	cnt = strlen(openFile->data);
 	strcpy_s(buf, openFile->data);
 	maxlen = sumlen;
 
@@ -422,7 +389,6 @@ label:
 		}
 	}
 
-	//cout << "当前buf内容：" << buf << endl;
 	// 将buf内容写回文件的磁盘块
 	SaveFileData(disk, fileInode, buf, strlen(buf));
 
