@@ -961,6 +961,47 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 					::memset(&disk.data[blockID], 0, sizeof(block));
 					FreeABlock(disk, blockID);
 				}
+				int blockID = path->DataBlockIndex1;
+				::memset(&disk.data[blockID], 0, sizeof(block));
+				FreeABlock(disk, blockID);
+			}
+			// 二级间址
+			if (blockNum > 138) {
+				if (blockNum > 138 + 128) {
+					DataBlockIndexFile dataBlockIndexFile1 = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex2);
+					for (int i = 0; i < (blockNum - 138) / 128; i++) {
+						DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile1.index[i]);
+						for (int j = 0; j < 128; j++) {
+							int blockID = dataBlockIndexFile2.index[j];
+							::memset(&disk.data[blockID], 0, sizeof(block));
+							FreeABlock(disk, blockID);
+						}
+						int blockID = dataBlockIndexFile1.index[i];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+					int t = (blockNum - 138) / 128;
+					DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile1.index[t]);
+					for (int j = 0; j < (blockNum - 138) % 128; j++) {
+						int blockID = dataBlockIndexFile2.index[j];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+					int blockID = dataBlockIndexFile1.index[t];
+					::memset(&disk.data[blockID], 0, sizeof(block));
+					FreeABlock(disk, blockID);
+				}
+				else {
+					DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex2);
+					for (int j = 0; j < (blockNum - 138) % 128; j++) {
+						int blockID = dataBlockIndexFile.index[j];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+				}
+				int blockID = path->DataBlockIndex2;
+				::memset(&disk.data[blockID], 0, sizeof(block));
+				FreeABlock(disk, blockID);
 			}
 			// 若不是子文件夹，更改目录结构，传递当前目录Inode，folder，删除的文件名称，删除的文件在目录中的序号
 			// 如果是子文件夹，因为最后全都删了，就不用改了
