@@ -521,18 +521,25 @@ void ShowText(char* pathName, inode* nowpath)
 File* OpenFile(Disk &disk, inode* fileInode)
 {
 	File* newFile = new File;
-
+	 
 	newFile->dataSize = fileInode->size;
 	newFile->fileInode = fileInode;
 	newFile->data = new char[newFile->dataSize];
+	//cout << strlen(newFile->data) << " " << newFile->dataSize << endl;
+	
 
 	int CharInOneBlockSum = sizeof(block) - sizeof(int);
 	int fileDataBlockSum = fileInode->size / CharInOneBlockSum + 1;
-
+	//int n[800];
+	//int m[800];
+	//cout << fileDataBlockSum << endl;
+	//cout << fileInode->DataBlockIndex1 << endl;
 	for (int i = 0; i < min(fileDataBlockSum, 10); i++)
 	{
 		TextBlock* textBlock = LoadTextBlockFromDisk(disk, fileInode->DataBlockIndex0[i]);
 		::memcpy(newFile->data+i* CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+		//n[i] = i;
+		//m[i] = fileInode->DataBlockIndex0[i];
 
 	}
 	if (fileDataBlockSum > 10)
@@ -542,20 +549,24 @@ File* OpenFile(Disk &disk, inode* fileInode)
 		{
 			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile.index[i - 10]);
 			::memcpy(newFile->data + i * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
-			
+			//n[i] = i;
+			//m[i] = dataBlockIndexFile.index[i - 10];
 		}
 	}
 	if (fileDataBlockSum > 138)
 	{
 		DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, fileInode->DataBlockIndex2);
 		DataBlockIndexFile dataBlockIndexFile2s;
-		for (int i = 0; i < (fileDataBlockSum - 138) / 128 - 1; i++)
+		for (int i = 0; i < (fileDataBlockSum - 138) / 128 ; i++)
 		{
 			dataBlockIndexFile2s = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile2.index[i]);
+			//cout << "dataBlockIndexFile2.index[i]" << dataBlockIndexFile2.index[i] << endl;
 			for (int j = 0; j < 128; j++)
 			{
 				TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile2s.index[j]);
 				::memcpy(newFile->data + (138 + i * 128 + j) * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+				//n[(138 + i * 128 + j)] = 138 + i * 128 + j;
+				//m[138 + i * 128 + j] = dataBlockIndexFile2s.index[j];
 			}
 		}
 
@@ -565,9 +576,13 @@ File* OpenFile(Disk &disk, inode* fileInode)
 		{
 			TextBlock* textBlock = LoadTextBlockFromDisk(disk, dataBlockIndexFile2s.index[i]);
 			::memcpy(newFile->data + (138 + t * 128 + i) * CharInOneBlockSum, textBlock->data, CharInOneBlockSum);
+			//n[138 + t * 128 + i] = 138 + t * 128 + i;
+			//m[138 + t * 128 + i] = dataBlockIndexFile2s.index[i];
 		}
 
 	}
+	//for (int i = 0; i < fileDataBlockSum; i++)
+		//cout << n[i] << ":" << m[i] << endl;
 	return newFile;
 
 }
@@ -579,16 +594,17 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 	int dataOneBlock = (sizeof(block) - sizeof(int));
 	int blockSize = fileInode->size / dataOneBlock + 1;
 	int indexBlock;
-
+	//cout << blockSize << endl;
 
 	for (int i = 0; i < min(blockSize, 10); i++)
-	{
+	{ 
 		indexBlock = GetOneBlock(disk);
 		TextBlock textBlock;
 		::memcpy(textBlock.data, &data[i * dataOneBlock], dataOneBlock);
 		textBlock.inodeindex = fileInode->inodeId;
 		fileInode->DataBlockIndex0[i] = indexBlock;
-		SaveTextBlockToDisk(disk, indexBlock, textBlock);
+		SaveTextBlockToDisk(disk, indexBlock, textBlock);  
+		//cout << i << " "<< indexBlock << endl;
 
 	}
 
@@ -604,8 +620,11 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 			textBlock.inodeindex = fileInode->inodeId;
 			dataBlockIndexFile.index[i - 10] = indexBlock;
 			SaveTextBlockToDisk(disk, indexBlock, textBlock);
+			//cout << i << " " << indexBlock << endl;
 		}
 		int dataBlockIndex1FileIndex = GetOneBlock(disk);
+		//
+		//cout << "dataBlockIndex1FileIndex" << ":" << dataBlockIndex1FileIndex << endl;
 		SaveDataBlockIndexFileToDisk(dataBlockIndexFile, disk, dataBlockIndex1FileIndex);
 
 		fileInode->DataBlockIndex1 = dataBlockIndex1FileIndex;
@@ -624,29 +643,35 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 				{
 					indexBlock = GetOneBlock(disk);
 					TextBlock textBlock;
-					::memcpy(textBlock.data, &data[138 + 128 * i + j], dataOneBlock);
+					::memcpy(textBlock.data, &data[(138 + 128 * i + j)* dataOneBlock], dataOneBlock);
 					textBlock.inodeindex = fileInode->inodeId;
 					dataBlockIndexFile1.index[j] = indexBlock;
 					SaveTextBlockToDisk(disk, indexBlock, textBlock);
+					//cout << (138 + 128 * i + j) << dataBlockIndexFile1.index[j]<<" " << indexBlock << endl;
 				}
 				int dataBlockIndexFileIndex = GetOneBlock(disk);//二级间接块指向的目录块
+				
 				SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
 				dataBlockIndexFile2.index[i] = dataBlockIndexFileIndex;
+				//cout << "dataBlockIndexFileIndex" << ":" << dataBlockIndexFileIndex << ":"<<dataBlockIndexFile2.index[i] << endl;
 			}
 			int t = (blockSize - 138) / 128;
 			for (int j = 0; j < (blockSize - 138) % 128; j++)
 			{
 				indexBlock = GetOneBlock(disk);
 				TextBlock textBlock;
-				::memcpy(textBlock.data, &data[138 + 128 * t + j], dataOneBlock);
+				::memcpy(textBlock.data, &data[(138 + 128 * t + j)* dataOneBlock], dataOneBlock);
 				textBlock.inodeindex = fileInode->inodeId;
 				dataBlockIndexFile1.index[j] = indexBlock;
+				
 				SaveTextBlockToDisk(disk, indexBlock, textBlock);
+				//cout << (138 + 128 * t + j) << " " << dataBlockIndexFile1.index[j] << indexBlock << endl;
 			}
 			int dataBlockIndexFileIndex = GetOneBlock(disk);//二级间接块指向的目录块
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
 			dataBlockIndexFile2.index[t] = dataBlockIndexFileIndex;
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile2, disk, dataBlockIndex2FileIndex);
+			//cout << "dataBlockIndex2FileIndex :" << dataBlockIndex2FileIndex<<":"<< dataBlockIndexFile2.index[t]<<    " "<<dataBlockIndexFileIndex << endl;
 			fileInode->DataBlockIndex2 = dataBlockIndex2FileIndex;
 		}
 		else
@@ -660,6 +685,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 				textBlock.inodeindex = fileInode->inodeId;
 				dataBlockIndexFile1.index[j] = indexBlock;
 				SaveTextBlockToDisk(disk, indexBlock, textBlock);
+				//cout << 138 + j << " " << indexBlock << endl;
 			}
 			int dataBlockIndexFileIndex = GetOneBlock(disk);//二级间接块指向的目录块
 			SaveDataBlockIndexFileToDisk(dataBlockIndexFile1, disk, dataBlockIndexFileIndex);
