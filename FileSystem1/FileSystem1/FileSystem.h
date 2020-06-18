@@ -221,7 +221,7 @@ void SaveTextBlockToDisk(Disk& disk, int index, TextBlock& textBlock);
 TextBlock* LoadTextBlockFromDisk(Disk& disk, int index);
 void NewTxt(inode* FolderInode);
 void ShowText(char *pathName, inode* nowpath);
-void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
+bool NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName);
 
 void LS(char* folderPathName,char *mode);
 void CD(char* name, inode** nowpath);

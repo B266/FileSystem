@@ -349,7 +349,7 @@ void InitRootFolder()
 
 	strcpy_s(Inode[SuperBlock.firstInode].username, NowUser);
 	strcpy_s(Inode[SuperBlock.firstInode].usergroupname, NowGroupName);
-	Inode[SuperBlock.firstInode].permissions = 777;
+	Inode[SuperBlock.firstInode].permissions = 755;
 	SaveFolderToBlock(disk, Inode[SuperBlock.firstInode].DataBlockIndex0[0], rootF);
 
 }
@@ -475,10 +475,37 @@ void ShowText(char* pathName, inode* nowpath)
 
 
 	File* openFile = OpenFile(disk, fileinode);
-	
 	cout << "filename:" << fileinode->Name << endl;
+	cout << "ExtensionName:" << fileinode->ExtensionName << endl;
 	cout << "data:" << endl;
-	cout << openFile->data;
+
+	if (strcmp(fileinode->ExtensionName, "txt") == 0||strcmp(fileinode->ExtensionName,"c")==0||strcmp(fileinode->ExtensionName,"tm")==0)
+	{
+		//输出ascii模式
+		cout << openFile->data;
+	}
+	else
+	{
+		//输出十六进制
+		cout << "index\tdata" << endl;
+		int linesize = 32;
+		for (int i = 0; i < openFile->dataSize; i++)
+		{
+			if (i % linesize == 0)
+			{
+				cout << endl;
+				cout << i << "\t";
+			}
+			char buffer[3] = { 0 };
+			unsigned char ch = openFile->data[i];
+			sprintf_s(buffer, "%02x", ch);
+			
+			cout << buffer <<" ";
+			
+
+		}
+		cout << endl;
+	}
 
 	
 }
@@ -539,7 +566,7 @@ File* OpenFile(Disk &disk, inode* fileInode)
 
 void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 {
-	fileInode->size = strlen(data);
+	fileInode->size = datasize;
 
 	int dataOneBlock = (sizeof(block) - sizeof(int));
 	int blockSize = fileInode->size / dataOneBlock + 1;
@@ -636,7 +663,7 @@ void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 	
 }
 
-void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
+bool NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 {
 
 	Folder folderBlock;
@@ -650,19 +677,19 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 		inode* haveSameNameFolder = getInodeByPathName(FileName, targetInode);
 		if (haveSameNameFolder != NULL) {
 			cout << "mkdir: 无法创建\"" << FileName << "\": 有同名文件已存在" << endl;
-			return;
+			return false;
 		}
 		::memcpy(folderName, FileName, strlen(FileName) + 1);
 	}
 	else {
-		return;
+		return false;
 	}
 
 	//权限判断
 	if (JudgePermission(targetInode, 1) == false)
 	{
 		cout << "mkdir: permission denied!" << endl;
-		return;
+		return false;
 	}
 
 
@@ -687,6 +714,8 @@ void NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 
 	//修改上级目录
 	AddItemInFolder(targetInode, folderName, inodeId);
+
+	return true;
 
 }
 
@@ -781,16 +810,17 @@ void CD(char* name, inode** nowpath)
 {
 	inode** path = nowpath; // 备份nowpath
 	inode* targetpath = getInodeByPathName(name, *path); // 获取目标地址的inode
-		//权限判断
-	if (JudgePermission(targetpath, 0) == false)
-	{
-		cout << "cd: permission denied!" << endl;
-		return;
-	}
+
 	//权限判断
 
 	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
 	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
+		//权限判断
+		if (JudgePermission(targetpath, 0) == false)
+		{
+			cout << "cd: permission denied!" << endl;
+			return;
+		}
 		*nowpath = targetpath;
 		char path[10][20]; // 最多10层路径
 		int i = 0, pathNum = 0, k = 0;
@@ -961,6 +991,47 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 					::memset(&disk.data[blockID], 0, sizeof(block));
 					FreeABlock(disk, blockID);
 				}
+				int blockID = path->DataBlockIndex1;
+				::memset(&disk.data[blockID], 0, sizeof(block));
+				FreeABlock(disk, blockID);
+			}
+			// 二级间址
+			if (blockNum > 138) {
+				if (blockNum > 138 + 128) {
+					DataBlockIndexFile dataBlockIndexFile1 = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex2);
+					for (int i = 0; i < (blockNum - 138) / 128; i++) {
+						DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile1.index[i]);
+						for (int j = 0; j < 128; j++) {
+							int blockID = dataBlockIndexFile2.index[j];
+							::memset(&disk.data[blockID], 0, sizeof(block));
+							FreeABlock(disk, blockID);
+						}
+						int blockID = dataBlockIndexFile1.index[i];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+					int t = (blockNum - 138) / 128;
+					DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile1.index[t]);
+					for (int j = 0; j < (blockNum - 138) % 128; j++) {
+						int blockID = dataBlockIndexFile2.index[j];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+					int blockID = dataBlockIndexFile1.index[t];
+					::memset(&disk.data[blockID], 0, sizeof(block));
+					FreeABlock(disk, blockID);
+				}
+				else {
+					DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex2);
+					for (int j = 0; j < (blockNum - 138) % 128; j++) {
+						int blockID = dataBlockIndexFile.index[j];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+				}
+				int blockID = path->DataBlockIndex2;
+				::memset(&disk.data[blockID], 0, sizeof(block));
+				FreeABlock(disk, blockID);
 			}
 			// 若不是子文件夹，更改目录结构，传递当前目录Inode，folder，删除的文件名称，删除的文件在目录中的序号
 			// 如果是子文件夹，因为最后全都删了，就不用改了
@@ -1290,7 +1361,7 @@ bool Import(char* pathnameInWindows, inode* folderInode)
 
 	//读取全部数据到新的File
 	FILE* In =new  FILE;
-	fopen_s(&In, pathnameInWindows, "r");
+	fopen_s(&In, pathnameInWindows, "rb");
 	if (In == NULL)
 	{
 		return NULL;
@@ -1394,8 +1465,8 @@ void MV(inode* NowPath, char* fileName, char* targetName) {
 }
 
 void CP(inode* NowPath, char* fileName, char* targetName) {
-	cout << "fileName:" << fileName << endl;
-	cout << "targetName: " << targetName << endl;
+	/*cout << "fileName:" << fileName << endl;
+	cout << "targetName: " << targetName << endl;*/
 	inode* fileInode = getInodeByPathName(fileName, NowPath);
 	inode* fileLastInode = getInodeByPathName(fileName, NowPath, 2);
 	inode* targetInode = getInodeByPathName(targetName, NowPath);
@@ -1435,14 +1506,8 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	}
 	// 原路径为文件夹
 	if (strcmp(fileInode->ExtensionName, "folder") == 0) {
-		Folder* newFolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
-		int indexInode = GetAInode();
-		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
-		int indexBlock = GetOneBlock(disk);
-		//SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
-		SaveFolderToBlock(disk, indexBlock, *newFolder);
-		AddItemInFolder(targetInode, FileName, indexInode);
-		//inode* folderInode = getInodeByPathName(fileName, targetInode);
+
+		NewFolder(disk, targetInode, FileName);
 
 		Folder* nowfolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
 		char newTargetName[MAXPATH_LEN];
@@ -1467,6 +1532,7 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 		File* newFile = OpenFile(disk, fileInode);
 		int indexInode = GetAInode();
 		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
+		Inode[indexInode].inodeId = indexInode;
 		SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
 		AddItemInFolder(targetInode, FileName, indexInode);
 	}
@@ -1519,6 +1585,7 @@ bool Login(char* name, char* password,Disk&disk)
 			{
 				isLogin = true;
 				strcpy_s(NowUser, name);
+
 				return true;
 			}
 		}
@@ -1573,8 +1640,12 @@ bool useradd(char* name,Disk&disk)
 	::memset(user.password[user.userSum], 0, sizeof(char) * PassWordLen);
 	user.userSum++;
 	SaveUserToDisk(disk, user);
-
-	NewFolder(disk, RootPath, name);
+	if (NewFolder(disk, RootPath, name) == false)
+	{
+		inode *folderInode = getInodeByPathName(name, RootPath, 1);
+		strcpy_s(folderInode->username, user.name[user.userSum - 1]);
+		strcpy_s(folderInode->usergroupname, user.GroupName[user.userSum - 1]);
+	}
 	return true;
 
 
@@ -1763,8 +1834,10 @@ void su(char* username)
 			if (strcmp(username, user.name[i]) == 0)
 			{
 				strcpy_s(NowGroupName, user.GroupName[i]);
+				
 			}
 		}
+		
 	}
 	else
 	{
@@ -1780,6 +1853,7 @@ void su(char* username)
 				{
 					strcpy_s(NowUser, username);
 					strcpy_s(NowGroupName, user.GroupName[i]);
+
 				}
 				else
 				{

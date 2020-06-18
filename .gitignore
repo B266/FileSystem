@@ -32,4 +32,6 @@ FileSystem1/FileSystem1/tmp.tm
 FileSystem1/FileSystem1/data.dat
 *.dat
 *.dat
-/.vs/B266FileSystem/v16
+FileSystem1/FileSystem1/asd.tm
+FileSystem1/FileSystem1/sort.tm
+FileSystem1/FileSystem1/test.tm
