@@ -557,7 +557,7 @@ File* OpenFile(Disk &disk, inode* fileInode)
 	{
 		DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, fileInode->DataBlockIndex2);
 		DataBlockIndexFile dataBlockIndexFile2s;
-		for (int i = 0; i < (fileDataBlockSum - 138) / 128 +1; i++)
+		for (int i = 0; i < (fileDataBlockSum - 138) / 128 ; i++)
 		{
 			dataBlockIndexFile2s = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile2.index[i]);
 			//cout << "dataBlockIndexFile2.index[i]" << dataBlockIndexFile2.index[i] << endl;
