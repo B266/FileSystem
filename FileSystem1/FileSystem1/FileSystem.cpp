@@ -989,6 +989,47 @@ void RM(Disk& disk, inode* folderInode, char* name, bool isSonFolder) {
 					::memset(&disk.data[blockID], 0, sizeof(block));
 					FreeABlock(disk, blockID);
 				}
+				int blockID = path->DataBlockIndex1;
+				::memset(&disk.data[blockID], 0, sizeof(block));
+				FreeABlock(disk, blockID);
+			}
+			// 二级间址
+			if (blockNum > 138) {
+				if (blockNum > 138 + 128) {
+					DataBlockIndexFile dataBlockIndexFile1 = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex2);
+					for (int i = 0; i < (blockNum - 138) / 128; i++) {
+						DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile1.index[i]);
+						for (int j = 0; j < 128; j++) {
+							int blockID = dataBlockIndexFile2.index[j];
+							::memset(&disk.data[blockID], 0, sizeof(block));
+							FreeABlock(disk, blockID);
+						}
+						int blockID = dataBlockIndexFile1.index[i];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+					int t = (blockNum - 138) / 128;
+					DataBlockIndexFile dataBlockIndexFile2 = LoadDataBlockIndexFileFromDisk(disk, dataBlockIndexFile1.index[t]);
+					for (int j = 0; j < (blockNum - 138) % 128; j++) {
+						int blockID = dataBlockIndexFile2.index[j];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+					int blockID = dataBlockIndexFile1.index[t];
+					::memset(&disk.data[blockID], 0, sizeof(block));
+					FreeABlock(disk, blockID);
+				}
+				else {
+					DataBlockIndexFile dataBlockIndexFile = LoadDataBlockIndexFileFromDisk(disk, folderInode->DataBlockIndex2);
+					for (int j = 0; j < (blockNum - 138) % 128; j++) {
+						int blockID = dataBlockIndexFile.index[j];
+						::memset(&disk.data[blockID], 0, sizeof(block));
+						FreeABlock(disk, blockID);
+					}
+				}
+				int blockID = path->DataBlockIndex2;
+				::memset(&disk.data[blockID], 0, sizeof(block));
+				FreeABlock(disk, blockID);
 			}
 			// 若不是子文件夹，更改目录结构，传递当前目录Inode，folder，删除的文件名称，删除的文件在目录中的序号
 			// 如果是子文件夹，因为最后全都删了，就不用改了
@@ -1405,8 +1446,8 @@ void MV(inode* NowPath, char* fileName, char* targetName) {
 }
 
 void CP(inode* NowPath, char* fileName, char* targetName) {
-	cout << "fileName:" << fileName << endl;
-	cout << "targetName: " << targetName << endl;
+	/*cout << "fileName:" << fileName << endl;
+	cout << "targetName: " << targetName << endl;*/
 	inode* fileInode = getInodeByPathName(fileName, NowPath);
 	inode* fileLastInode = getInodeByPathName(fileName, NowPath, 2);
 	inode* targetInode = getInodeByPathName(targetName, NowPath);
@@ -1446,14 +1487,8 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 	}
 	// 原路径为文件夹
 	if (strcmp(fileInode->ExtensionName, "folder") == 0) {
-		Folder* newFolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
-		int indexInode = GetAInode();
-		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
-		int indexBlock = GetOneBlock(disk);
-		//SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
-		SaveFolderToBlock(disk, indexBlock, *newFolder);
-		AddItemInFolder(targetInode, FileName, indexInode);
-		//inode* folderInode = getInodeByPathName(fileName, targetInode);
+
+		NewFolder(disk, targetInode, FileName);
 
 		Folder* nowfolder = loadFolderFromDisk(disk, fileInode->DataBlockIndex0[0]);
 		char newTargetName[MAXPATH_LEN];
@@ -1478,6 +1513,7 @@ void CP(inode* NowPath, char* fileName, char* targetName) {
 		File* newFile = OpenFile(disk, fileInode);
 		int indexInode = GetAInode();
 		memcpy(&Inode[indexInode], fileInode, sizeof(inode));
+		Inode[indexInode].inodeId = indexInode;
 		SaveFileData(disk, &Inode[indexInode], newFile->data, newFile->dataSize);
 		AddItemInFolder(targetInode, FileName, indexInode);
 	}
