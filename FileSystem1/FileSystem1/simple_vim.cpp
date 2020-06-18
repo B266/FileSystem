@@ -22,10 +22,12 @@ void vim(inode* nowPath, char* fileName) {
 	// 新建文件
 	if (fileInode == NULL && fatherFolderInode != NULL) {
 		int indexInode = GetAInode();
-		char text[99999] = { 0 };
+		char FileName[NameLen] = { 0 };
+		char ExtensionName[NameLen] = { 0 };
+		GetFileNameAndExtensionName(fileName, FileName, ExtensionName);
 		//填写inode
-		strcpy_s(Inode[indexInode].Name, fileName);
-		strcpy_s(Inode[indexInode].ExtensionName, "txt");
+		strcpy_s(Inode[indexInode].Name, FileName);
+		strcpy_s(Inode[indexInode].ExtensionName, ExtensionName);
 		strcpy_s(Inode[indexInode].username, NowUser);
 		strcpy_s(Inode[indexInode].usergroupname, NowGroupName);
 		Inode[indexInode].size = 0;
@@ -36,7 +38,7 @@ void vim(inode* nowPath, char* fileName) {
 		//SaveFileData(disk, &Inode[indexInode], text, strlen(text));
 
 		//修改上级目录
-		AddItemInFolder(fatherFolderInode, fileName, indexInode);
+		AddItemInFolder(fatherFolderInode, FileName, indexInode);
 
 		fileInode = &Inode[indexInode];
 	}
