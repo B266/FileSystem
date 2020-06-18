@@ -58,7 +58,8 @@ void vim(inode* nowPath, char* fileName) {
 	//将文件内容读取出来，显示在，窗口上
 	int i = 0;
 	int sumlen = fileInode->size;	//文件长度
-	int getlen = 0;	//取出来的长度
+
+	cout << openFile->data;
 
 	cnt = strlen(openFile->data);
 	strcpy_s(buf, openFile->data);
@@ -182,7 +183,6 @@ void vim(inode* nowPath, char* fileName) {
 				}
 				if (pc == 'q') {
 					buf[maxlen] = '\0';
-					//buf[maxlen] = '\0'; 
 					SetConsoleTextAttribute(handle_out, screen_info.wAttributes); // 恢复原来的属性
 					system("cls");
 					break;	//vi >>>>>>>>>>>>>> 退出出口
@@ -201,8 +201,8 @@ void vim(inode* nowPath, char* fileName) {
 						gotoxy(handle_out, 0, cury + 1);
 					else
 						gotoxy(handle_out, 0, winy - 1);
-					SetConsoleTextAttribute(handle_out, FOREGROUND_INTENSITY | BACKGROUND_RED | BACKGROUND_BLUE | FOREGROUND_GREEN);	//设置文本颜色
-					FillConsoleOutputAttribute(handle_out, att, winx, pos, NULL);	//控制台部分着色
+					//SetConsoleTextAttribute(handle_out, FOREGROUND_INTENSITY | BACKGROUND_RED | BACKGROUND_BLUE | FOREGROUND_GREEN);	//设置文本颜色
+					//FillConsoleOutputAttribute(handle_out, att, winx, pos, NULL);	//控制台部分着色
 					printf(" 错误命令");
 					//getch();
 					SetConsoleTextAttribute(handle_out, screen_info.wAttributes); // 恢复原来的属性
@@ -391,5 +391,4 @@ void vim(inode* nowPath, char* fileName) {
 
 	// 将buf内容写回文件的磁盘块
 	SaveFileData(disk, fileInode, buf, strlen(buf));
-
 }
