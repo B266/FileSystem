@@ -484,8 +484,6 @@ void ShowText(char* pathName, inode* nowpath)
 	if (strcmp(fileinode->ExtensionName, "txt") == 0||strcmp(fileinode->ExtensionName,"c")==0||strcmp(fileinode->ExtensionName,"tm")==0)
 	{
 		//输出ascii模式
-		cout << strlen(openFile->data) << endl;
-		cout << openFile->dataSize << endl;
 		
 
 		cout << openFile->data << endl;
@@ -524,7 +522,8 @@ File* OpenFile(Disk &disk, inode* fileInode)
 	 
 	newFile->dataSize = fileInode->size;
 	newFile->fileInode = fileInode;
-	newFile->data = new char[newFile->dataSize];
+	newFile->data = new char[newFile->dataSize+1];
+	memset(newFile->data, 0, newFile->dataSize + 1);
 	//cout << strlen(newFile->data) << " " << newFile->dataSize << endl;
 	
 
@@ -589,7 +588,7 @@ File* OpenFile(Disk &disk, inode* fileInode)
 
 void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 {
-	fileInode->size = datasize;
+	fileInode->size = datasize+1;
 
 	int dataOneBlock = (sizeof(block) - sizeof(int));
 	int blockSize = fileInode->size / dataOneBlock + 1;
@@ -1309,13 +1308,18 @@ void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
 		::memset(Arr3, 0, MAXPATH_LEN);
 		memcpy(Arr3, Arr + indexL[2], (indexR[2] - indexL[2] + 1) * sizeof(char));
 	}
-
 }
 
 
 //向windows导出文件
 bool Export(char* pathname, inode* FileInde)
 {
+	if (strlen(pathname) == 0)
+	{
+		char fullname[NameLen + 1 + NameLen] = { 0 };
+		sprintf_s(fullname, "%s.%s", FileInde->Name, FileInde->ExtensionName);
+		strcpy_s(pathname,sizeof(fullname) ,fullname);
+	}
 	ofstream out;
 	out.open(pathname, ios::out | ios::binary);
 	File *saveFile = OpenFile(disk, FileInde);

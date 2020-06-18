@@ -35,7 +35,7 @@ int main()
 	//cout << sizeof(char)* NameLen << endl;
 	//cout << "block: " << sizeof(block) << endl;
 	//cout << "inode: " << sizeof(inode) << endl;
-	cout << sizeof(User) << endl;
+	//cout << sizeof(User) << endl;
 
 
 	while (1)
@@ -155,6 +155,10 @@ int main()
 		}
 		else if (strcmp(Arr1, "vim") == 0) {
 			vim(NowPath, Arr2);
+		}
+		else if (strcmp(Arr1, "showpic") == 0)
+		{
+			showPic(Arr2, NowPath);
 		}
 		else
 		{

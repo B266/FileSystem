@@ -35,7 +35,7 @@ typedef enum {
 typedef enum {
 	/* RR instructions */
 	opHALT,	/* RR halt,operands must be zero */
-	opIN,	/* RR read into reg(r); s and t are ignored */
+	opIN,	/* RR showPic into reg(r); s and t are ignored */
 	opOUT,	/* RR write from reg(r), s and t are ignored */
 	opADD,	/* RR reg(r) = reg(s)+reg(t) */
 	opSUB,	/* RR reg(r) = reg(s)-reg(t) */
@@ -673,12 +673,12 @@ int tm_c(char*data)
 	memcpy(pgm, data, strlen(data));
 	
 
-	/* read the program */
+	/* showPic the program */
 	if (!readInstructions())
 		exit(1);
 	/* switch input file to terminal */
 	/* reset( input ); */
-	/* read-eval-print */
+	/* showPic-eval-print */
 	printf("TM  simulation (enter h for help)...\n");
 	do
 		done = !doCommand();

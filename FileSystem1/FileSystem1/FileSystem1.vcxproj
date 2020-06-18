@@ -143,12 +143,14 @@
     <ClCompile Include="Format.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="showPic.cpp" />
     <ClCompile Include="simple_vim.cpp" />
     <ClCompile Include="tm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cminicomplier.h" />
     <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="showPic.h" />
     <ClInclude Include="simple_vim.h" />
     <ClInclude Include="tm.h" />
   </ItemGroup>

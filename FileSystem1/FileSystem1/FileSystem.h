@@ -15,6 +15,7 @@
 
 
 
+
 const int FILE_NAME_LEN = 8;
 const int FILE_EXT_LEN = 8;
 
@@ -257,4 +258,6 @@ char* GetPasswd();
 // 获取字符串的文件名和扩展名
 void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName);
 
+
+#include"showPic.h"
 #endif FILESYSTEM_H
