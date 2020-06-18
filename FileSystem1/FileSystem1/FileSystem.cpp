@@ -413,17 +413,19 @@ void NewTxt(inode* FolderInode)
 	Inode[indexInode].permissions = 666;
 	getchar();
 	getchar();
-	const int maxsize = 99999;
+
 
 	//写入自己的datablock
-	char text[maxsize] = { 0 };
+	char* text = new char[MaxFileSize];
+	memset(text, 0, MaxFileSize * sizeof(char));
 	
 	cout << "data:";
+	const int MaxLineSize = MaxFileSize / 100;
 
 	while (1)
 	{
-		char lineBuffer[99999] = { 0 };
-		cin.getline(lineBuffer, 99999);
+		char lineBuffer[MaxLineSize] = { 0 };
+		cin.getline(lineBuffer, MaxLineSize);
 		if (strcmp(lineBuffer, ":q") == 0)
 		{
 			break;
@@ -436,7 +438,7 @@ void NewTxt(inode* FolderInode)
 
 	SaveFileData(disk, &Inode[indexInode], text, strlen(text));
 
-	
+	delete[]text;
 	//修改上级目录
 	AddItemInFolder(FolderInode, name, indexInode);
 
@@ -482,7 +484,13 @@ void ShowText(char* pathName, inode* nowpath)
 	if (strcmp(fileinode->ExtensionName, "txt") == 0||strcmp(fileinode->ExtensionName,"c")==0||strcmp(fileinode->ExtensionName,"tm")==0)
 	{
 		//输出ascii模式
-		cout << openFile->data;
+		cout << strlen(openFile->data) << endl;
+		cout << openFile->dataSize << endl;
+		
+
+		cout << openFile->data << endl;
+
+
 	}
 	else
 	{
