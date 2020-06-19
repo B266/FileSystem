@@ -484,8 +484,6 @@ void ShowText(char* pathName, inode* nowpath)
 	if (strcmp(fileinode->ExtensionName, "txt") == 0||strcmp(fileinode->ExtensionName,"c")==0||strcmp(fileinode->ExtensionName,"tm")==0)
 	{
 		//输出ascii模式
-		cout << strlen(openFile->data) << endl;
-		cout << openFile->dataSize << endl;
 		
 
 		cout << openFile->data << endl;
@@ -524,7 +522,8 @@ File* OpenFile(Disk &disk, inode* fileInode)
 	 
 	newFile->dataSize = fileInode->size;
 	newFile->fileInode = fileInode;
-	newFile->data = new char[newFile->dataSize];
+	newFile->data = new char[newFile->dataSize+1];
+	memset(newFile->data, 0, newFile->dataSize + 1);
 	//cout << strlen(newFile->data) << " " << newFile->dataSize << endl;
 	
 
@@ -589,7 +588,7 @@ File* OpenFile(Disk &disk, inode* fileInode)
 
 void SaveFileData(Disk &disk,inode* fileInode, char* data, int datasize)
 {
-	fileInode->size = datasize;
+	fileInode->size = datasize+1;
 
 	int dataOneBlock = (sizeof(block) - sizeof(int));
 	int blockSize = fileInode->size / dataOneBlock + 1;
@@ -1309,13 +1308,18 @@ void CutArr(char* Arr, char* Arr1, char* Arr2, char* Arr3)
 		::memset(Arr3, 0, MAXPATH_LEN);
 		memcpy(Arr3, Arr + indexL[2], (indexR[2] - indexL[2] + 1) * sizeof(char));
 	}
-
 }
 
 
 //向windows导出文件
 bool Export(char* pathname, inode* FileInde)
 {
+	if (strlen(pathname) == 0)
+	{
+		char fullname[NameLen + 1 + NameLen] = { 0 };
+		sprintf_s(fullname, "%s.%s", FileInde->Name, FileInde->ExtensionName);
+		strcpy_s(pathname,sizeof(fullname) ,fullname);
+	}
 	ofstream out;
 	out.open(pathname, ios::out | ios::binary);
 	File *saveFile = OpenFile(disk, FileInde);
@@ -1910,4 +1914,126 @@ void WrongCommand(char *Arr1)
 		cout << "Try:help " << endl;
 	}
 	
+}
+
+bool SeemsLike(const char* name1, char* name2)
+{
+
+	int len1 = strlen(name1);
+	int len2 = strlen(name2);
+	int CurPos = 0;
+	int RightNum = 0;
+
+	for (int i = 0; i < len1; i++)
+		for (int j = CurPos; j < len2; j++)
+		{
+
+			if (name2[j] == name1[i]) {
+				CurPos = j + 1;
+				RightNum++;
+				break;
+			}
+
+			else continue;
+		}
+
+	if (RightNum == len1)
+		return true;
+	else return false;
+
+}
+
+void Find(const char* fileName, inode* Path)
+{
+	//cout << "find!" << endl;
+	Folder* CurFolder;//当前文件夹
+	File* CurFile;//当前文件
+	inode* CurInode;//当前inode
+	char CurName[20];//当前文件/文件夹名
+	char CurExtentionName[NameLen];//当前扩展名
+	memcpy(CurExtentionName, Path->ExtensionName, sizeof(Path->ExtensionName));
+	char TxtName[4] = "txt";
+
+	int CurIndex = Path->DataBlockIndex0[0];//当前索引
+	//cout << CurIndex;
+	static char CurPath[20][20];//当前路径，CurPath[x][y],x是第x层
+	static int PathIndex = 0;
+
+	if (strcmp(CurExtentionName, TxtName) != 0)//如果当前处理的不是txt文件
+	{
+		CurFolder = loadFolderFromDisk(disk, CurIndex); //Folder* loadFolderFromDisk(Disk& disk, int index)
+		for (int i = 2; i < CurFolder->itemSum; i++)//遍历当前文件夹下的子文件名
+		{
+			memcpy(CurName, CurFolder->name[i], sizeof(CurFolder->name[i]));//取CurFolder下的第i个文件的文件名
+
+			memcpy(CurPath[PathIndex], CurName, sizeof(CurName));//
+			PathIndex++;
+
+			CurIndex = CurFolder->index[i];//第0项上级目录，第1项它本身
+			//cout << "run" << endl;
+			CurInode = &Inode[CurIndex];
+
+			if (SeemsLike(fileName, CurName))
+				//if(strcmp(fileName,CurName)==0)
+			{
+				for (int j = 0; j < PathIndex; j++) {
+					if (j < PathIndex - 1)
+						cout << CurPath[j] << "/";
+					else cout << CurPath[j] << "." << CurInode->ExtensionName;
+
+				}
+				cout << endl;
+
+			}
+
+			Find(fileName, CurInode);//递归
+			memset(CurPath, 0, sizeof(CurPath));
+			PathIndex = 0;
+
+		}
+	}
+}
+
+void help() {
+	cout << "**************************************************" << endl;
+	cout << "--操作系统课程设计：模拟实现UNIX的文件系统" << endl;
+	cout << "--组长：余斐然 20174439 物联网1701班" << endl;
+	cout << "--组员：王理庚 20174601 物联网1701班" << endl;
+	cout << "--      刘  源 20174602 物联网1701班" << endl;
+	cout << "--      李  勐 20174717 物联网1701班" << endl;
+	cout << "--2020/6/19" << endl;
+	cout << "**************************************************" << endl;
+	cout << "--功能：" << endl;
+	cout << "--------------------------------------------------" << endl;
+	cout << "--添加用户：useradd [用户名]" << endl;
+	cout << "--修改用户密码：passwd [用户名]" << endl;
+	cout << "--切换用户：su [用户名]" << endl;
+	cout << "--------------------------------------------------" << endl;
+	cout << "--格式化：format" << endl;
+	cout << "--加载硬盘：load" << endl;
+	cout << "--保存硬盘：save" << endl;
+	cout << "--------------------------------------------------" << endl;
+	cout << "--新建目录：mkdir [目录]" << endl;
+	cout << "--打开目录：cd [目录]" << endl;
+	cout << "--列出目录文件：ls [目录]" << endl;
+	cout << "--------------------------------------------------" << endl;
+	cout << "--新建文件：new" << endl;
+	cout << "--从windows导入文件：import [文件/空]" << endl;
+	cout << "--向windows导出文件：export [文件] [windows路径]" << endl;
+	cout << "--显示文件内容：open [文件]" << endl;
+	cout << "--------------------------------------------------" << endl;
+	cout << "--修改文件或目录名称：rename [文件/目录] [新名字]" << endl;
+	cout << "--复制文件或目录：cp [文件/目录] [目录]" << endl;
+	cout << "--移动文件或目录：mv [文件/目录] [目录]" << endl;
+	cout << "--删除文件或目录：rm [文件/目录]" << endl;
+	cout << "--更改文件或目录权限：chmod [文件/目录] [权限]" << endl;
+	cout << "--查找文件或目录（支持模糊查找）：find [文件/目录]" << endl;
+	cout << "--------------------------------------------------" << endl;
+	cout << "--文本编辑器：vim [文件]" << endl;
+	cout << "--编译文件：compiler [文件]" << endl;
+	cout << "--运行虚拟机：tm [文件]" << endl;
+	cout << "--显示图片功能：showpic [文件]" << endl;
+	cout << "--------------------------------------------------" << endl;
+	cout << "--退出程序：exit" << endl;
+	cout << "--------------------------------------------------" << endl;
 }

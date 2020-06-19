@@ -15,6 +15,7 @@
 
 
 
+
 const int FILE_NAME_LEN = 8;
 const int FILE_EXT_LEN = 8;
 
@@ -233,6 +234,9 @@ bool Rename(char* filenameandpath, char* name); //重命名
 //Export 本硬盘内的文件 windows内的文件
 bool Export(char* pathnameInWindows, char* filepathname);
 void WrongCommand(char*Arr1);
+bool SeemsLike(const char* name1, char* name2);
+void Find(const char* fileName, inode* Path);
+void help();
 
 //switch user 切换账户
 void su(char* username); 
@@ -257,4 +261,6 @@ char* GetPasswd();
 // 获取字符串的文件名和扩展名
 void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionName);
 
+
+#include"showPic.h"
 #endif FILESYSTEM_H
