@@ -160,6 +160,9 @@ int main()
 		{
 			showPic(Arr2, NowPath);
 		}
+		else if (strcmp(Arr1, "help") == 0) {
+			help();
+		}
 		else
 		{
 			WrongCommand(Arr1);

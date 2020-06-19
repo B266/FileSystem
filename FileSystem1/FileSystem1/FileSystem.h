@@ -234,6 +234,7 @@ bool Rename(char* filenameandpath, char* name); //重命名
 //Export 本硬盘内的文件 windows内的文件
 bool Export(char* pathnameInWindows, char* filepathname);
 void WrongCommand(char*Arr1);
+void help();
 
 //switch user 切换账户
 void su(char* username); 
