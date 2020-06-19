@@ -263,4 +263,5 @@ void GetFileNameAndExtensionName(char* AllName, char* FileName, char* ExtensionN
 
 
 #include"showPic.h"
+#include"vim.h"
 #endif FILESYSTEM_H

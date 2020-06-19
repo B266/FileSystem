@@ -146,6 +146,7 @@
     <ClCompile Include="showPic.cpp" />
     <ClCompile Include="simple_vim.cpp" />
     <ClCompile Include="tm.cpp" />
+    <ClCompile Include="vim.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cminicomplier.h" />
@@ -153,6 +154,7 @@
     <ClInclude Include="showPic.h" />
     <ClInclude Include="simple_vim.h" />
     <ClInclude Include="tm.h" />
+    <ClInclude Include="vim.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -43,6 +43,7 @@ void vim(inode* nowPath, char* fileName) {
 
 	//cout << openFile->data << endl;
 	int maxlen = 0; // 达到过的最大长度
+	
 	char buf[99999];	//最大100K
 
 	//初始化vi
@@ -58,8 +59,6 @@ void vim(inode* nowPath, char* fileName) {
 	//将文件内容读取出来，显示在，窗口上
 	int i = 0;
 	int sumlen = fileInode->size;	//文件长度
-
-	cout << openFile->data;
 
 	cnt = strlen(openFile->data);
 	strcpy_s(buf, openFile->data);
