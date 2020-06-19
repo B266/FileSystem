@@ -1916,6 +1916,84 @@ void WrongCommand(char *Arr1)
 	
 }
 
+bool SeemsLike(const char* name1, char* name2)
+{
+
+	int len1 = strlen(name1);
+	int len2 = strlen(name2);
+	int CurPos = 0;
+	int RightNum = 0;
+
+	for (int i = 0; i < len1; i++)
+		for (int j = CurPos; j < len2; j++)
+		{
+
+			if (name2[j] == name1[i]) {
+				CurPos = j + 1;
+				RightNum++;
+				break;
+			}
+
+			else continue;
+		}
+
+	if (RightNum == len1)
+		return true;
+	else return false;
+
+}
+
+void Find(const char* fileName, inode* Path)
+{
+	//cout << "find!" << endl;
+	Folder* CurFolder;//当前文件夹
+	File* CurFile;//当前文件
+	inode* CurInode;//当前inode
+	char CurName[20];//当前文件/文件夹名
+	char CurExtentionName[NameLen];//当前扩展名
+	memcpy(CurExtentionName, Path->ExtensionName, sizeof(Path->ExtensionName));
+	char TxtName[4] = "txt";
+
+	int CurIndex = Path->DataBlockIndex0[0];//当前索引
+	//cout << CurIndex;
+	static char CurPath[20][20];//当前路径，CurPath[x][y],x是第x层
+	static int PathIndex = 0;
+
+	if (strcmp(CurExtentionName, TxtName) != 0)//如果当前处理的不是txt文件
+	{
+		CurFolder = loadFolderFromDisk(disk, CurIndex); //Folder* loadFolderFromDisk(Disk& disk, int index)
+		for (int i = 2; i < CurFolder->itemSum; i++)//遍历当前文件夹下的子文件名
+		{
+			memcpy(CurName, CurFolder->name[i], sizeof(CurFolder->name[i]));//取CurFolder下的第i个文件的文件名
+
+			memcpy(CurPath[PathIndex], CurName, sizeof(CurName));//
+			PathIndex++;
+
+			CurIndex = CurFolder->index[i];//第0项上级目录，第1项它本身
+			//cout << "run" << endl;
+			CurInode = &Inode[CurIndex];
+
+			if (SeemsLike(fileName, CurName))
+				//if(strcmp(fileName,CurName)==0)
+			{
+				for (int j = 0; j < PathIndex; j++) {
+					if (j < PathIndex - 1)
+						cout << CurPath[j] << "/";
+					else cout << CurPath[j] << "." << CurInode->ExtensionName;
+
+				}
+				cout << endl;
+
+			}
+
+			Find(fileName, CurInode);//递归
+			memset(CurPath, 0, sizeof(CurPath));
+			PathIndex = 0;
+
+		}
+	}
+}
+
 void help() {
 	cout << "**************************************************" << endl;
 	cout << "--操作系统课程设计：模拟实现UNIX的文件系统" << endl;
@@ -1943,11 +2021,13 @@ void help() {
 	cout << "--从windows导入文件：import [文件/空]" << endl;
 	cout << "--向windows导出文件：export [文件] [windows路径]" << endl;
 	cout << "--显示文件内容：open [文件]" << endl;
+	cout << "--------------------------------------------------" << endl;
 	cout << "--修改文件或目录名称：rename [文件/目录] [新名字]" << endl;
 	cout << "--复制文件或目录：cp [文件/目录] [目录]" << endl;
 	cout << "--移动文件或目录：mv [文件/目录] [目录]" << endl;
 	cout << "--删除文件或目录：rm [文件/目录]" << endl;
-	cout << "--更改权限：chmod [文件] [权限]" << endl;
+	cout << "--更改文件或目录权限：chmod [文件/目录] [权限]" << endl;
+	cout << "--查找文件或目录（支持模糊查找）：find [文件/目录]" << endl;
 	cout << "--------------------------------------------------" << endl;
 	cout << "--文本编辑器：vim [文件]" << endl;
 	cout << "--编译文件：compiler [文件]" << endl;

@@ -160,6 +160,10 @@ int main()
 		{
 			showPic(Arr2, NowPath);
 		}
+		else if (strcmp(Arr1, "find") == 0)
+		{
+			Find(Arr2, NowPath);
+		}
 		else if (strcmp(Arr1, "help") == 0) {
 			help();
 		}
