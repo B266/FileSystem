@@ -1,6 +1,10 @@
 #include "simple_vim.h"
 using namespace std;
 
+HANDLE handle_out;                              //定义一个句柄  
+CONSOLE_SCREEN_BUFFER_INFO screen_info;         //定义窗口缓冲区信息结构体  
+COORD pos = { 0, 0 };                             //定义一个坐标结构体
+
 void gotoxy(HANDLE hOut, int x, int y)	//移动光标到指定位置
 {
 	COORD pos;
@@ -52,9 +56,7 @@ void vim(inode* nowPath, char* fileName) {
 
 	int winx, winy, curx, cury;
 
-	HANDLE handle_out;                              //定义一个句柄  
-	CONSOLE_SCREEN_BUFFER_INFO screen_info;         //定义窗口缓冲区信息结构体  
-	COORD pos = { 0, 0 };                             //定义一个坐标结构体
+
 
 	//将文件内容读取出来，显示在，窗口上
 	int i = 0;
@@ -63,6 +65,7 @@ void vim(inode* nowPath, char* fileName) {
 	cnt = strlen(openFile->data);
 	strcpy_s(buf, openFile->data);
 	maxlen = sumlen;
+	cout << buf;
 
 	//获得输出之后的光标位置
 	handle_out = GetStdHandle(STD_OUTPUT_HANDLE);   //获得标准输出设备句柄  

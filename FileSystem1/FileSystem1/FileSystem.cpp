@@ -469,7 +469,7 @@ void ShowText(char* pathName, inode* nowpath)
 	}
 
 
-	if (JudgePermission(fileinode, 0) == false)
+	if (JudgePermission(fileinode, 2) == false)
 	{
 		cout << "open: permission denied!" << endl;
 		return;
@@ -758,7 +758,7 @@ bool NewFolder(Disk& disk, inode* FatherFolderInode, char* folderName)
 void LS(inode* FolderInode, int mode)
 {
 	//权限判断
-	if (JudgePermission(FolderInode, 0) == false)
+	if (JudgePermission(FolderInode, 2) == false)
 	{
 		cout << "ls: permission denied!" << endl;
 		return;
@@ -849,7 +849,7 @@ void CD(char* name, inode** nowpath)
 	// 查看当前inode是否获取成功以及是否为文件夹，若是则更改nowpath
 	if (targetpath != NULL && strcmp(targetpath->ExtensionName, "folder") == 0) {
 		//权限判断
-		if (JudgePermission(targetpath, 0) == false)
+		if (JudgePermission(targetpath, 2) == false)
 		{
 			cout << "cd: permission denied!" << endl;
 			return;
@@ -1249,7 +1249,7 @@ int tm_f(char* filename, inode* NowPath,Disk& disk) {
 	inode* folderInode = getInodeByPathName(filename, NowPath, 2);
 	if (FileInode != NULL)
 	{
-		if (JudgePermission(folderInode, 0) == false)
+		if (JudgePermission(folderInode, 2) == false)
 		{
 			cout << "complier: permission denied!" << endl;
 			return -1;
@@ -1425,6 +1425,7 @@ bool Import(char* pathnameInWindows, inode* folderInode)
 	GetFileNameAndExtensionName(pathnameInWindows, FileNameInWindows, ExtensionNameInWindows);
 	memcpy(Inode[fileInodeIndex].Name, FileNameInWindows, strlen(FileNameInWindows));
 	memcpy(Inode[fileInodeIndex].ExtensionName, ExtensionNameInWindows, strlen(ExtensionNameInWindows));
+	Inode[fileInodeIndex].permissions = 666;
 	
 	SaveFileData(disk, &Inode[fileInodeIndex], InData, length);
 
@@ -1823,7 +1824,7 @@ char* GetPasswd()
 
 //判断是否可执行操作 可以执行返回true
 // file待判断的文件
-// mode 模式 0 读 1 写 2 执行
+// mode 模式 2 读 1 写 0 执行
 // 读 写 执行
 // r=4  w=2   x=1  
 bool JudgePermission(inode* file, int mode)

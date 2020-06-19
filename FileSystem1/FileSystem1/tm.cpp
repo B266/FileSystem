@@ -659,8 +659,18 @@ int doCommand(void)
 /* E X E C U T I O N   B E G I N S   H E R E */
 /********************************************/
 
+void tm_init()
+{
+	iloc = 0;
+	dloc = 0;
+	traceflag = FALSE;
+	icountflag = FALSE;
+
+}
+
 int tm_c(char*data,int datasize)
 {
+	tm_init();
 	/*
 	if (argc != 2)
 	{
@@ -695,5 +705,6 @@ int tm_c(char*data,int datasize)
 		done = !doCommand();
 	while (!done);
 	printf("Simulation done.\n");
+	free(buf);
 	return 0;
 }

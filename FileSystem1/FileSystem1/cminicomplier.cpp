@@ -2585,7 +2585,7 @@ TokenType getToken(void) {
 				state = INNUM;
 			else if (isalpha(c) || c == '_')
 				state = INID;
-			else if ((c == ' ') || (c == '\t') || (c == '\n'))
+			else if ((c == ' ') || (c == '\t') || (c == '\n')||(c=='\r'))
 				save = FALSE;
 			else {
 				state = DONE;

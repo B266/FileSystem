@@ -414,7 +414,7 @@ bool VIM(char* filename, inode* NowPath)
 		File* BmpFile = OpenFile(disk, BmpInode);
 
 		ofstream out;
-		out.open("temp.txt", ios::out | ios::binary);
+		out.open("tempVIM.txt", ios::out | ios::binary);
 
 		char* buffer = (char*)malloc(sizeof(CHAR) * BmpFile->dataSize);
 		::memcpy(buffer, BmpFile->data, sizeof(CHAR) * BmpFile->dataSize);
@@ -424,8 +424,9 @@ bool VIM(char* filename, inode* NowPath)
 
 		//fopen();
 
-		VIM_("temp.txt", BmpInode->Name);
+		VIM_("tempVIM.txt", BmpInode->Name);
 		system("cls");
+		free(buffer);
 
 		return true;
 	}

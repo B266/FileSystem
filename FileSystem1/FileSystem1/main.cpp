@@ -167,6 +167,10 @@ int main()
 		else if (strcmp(Arr1, "help") == 0) {
 			help();
 		}
+		else if (strcmp(Arr1, "VIM") == 0)
+		{
+			VIM(Arr2, NowPath);
+		}
 		else
 		{
 			WrongCommand(Arr1);
