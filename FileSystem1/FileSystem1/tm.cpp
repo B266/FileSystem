@@ -4,7 +4,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<ctype.h>
-
+#include <fstream>
 
 using namespace std;
 
@@ -99,6 +99,7 @@ const char* stepResultTab[]
 
 char pgmName[20];
 FILE* pgm;
+FILE* fp;
 
 char in_Line[LINESIZE];
 int lineLen;
@@ -658,7 +659,7 @@ int doCommand(void)
 /* E X E C U T I O N   B E G I N S   H E R E */
 /********************************************/
 
-int tm_c(char*data)
+int tm_c(char*data,int datasize)
 {
 	/*
 	if (argc != 2)
@@ -670,10 +671,20 @@ int tm_c(char*data)
 	if (strchr(pgmName, '.') == NULL)
 		strcat(pgmName, ".tm");
 		*/
-	memcpy(pgm, data, strlen(data));
-	
-
+	//memcpy(pgm, data, strlen(data));
+	//char *Data = data;
+	//fp = fopen("file.tm", "w");
+	//fwrite(Data,sizeof(char) ,sizeof(data), fp);
+	//printf(data);
+	//pgm = fopen("file.tm", "r");
 	/* read the program */
+	char* buf = (char*)malloc(sizeof(char) * datasize + 1);
+	memcpy(buf, data, datasize + 1);
+
+	pgm = fopen("tmp.txt", "w+");
+	fputs(buf, pgm);
+	fclose(pgm);
+	pgm = fopen("tmp.txt", "r");
 	if (!readInstructions())
 		exit(1);
 	/* switch input file to terminal */

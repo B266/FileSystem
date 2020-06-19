@@ -1256,7 +1256,7 @@ int tm_f(char* filename, inode* NowPath,Disk& disk) {
 			return -1;
 		}
 		File* file = OpenFile(disk, FileInode);
-		tm_c(file->data);
+		tm_c(file->data, FileInode->size);
 	}
 	return 0;
 }
