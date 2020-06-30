@@ -284,8 +284,10 @@ void GameLoop()
 bool showPic(char* filename, inode* NowPath)
 {
 	inode* BmpInode = getInodeByPathName(filename, NowPath, 1);
+	quitWindowsFlag = false;
 	if (BmpInode != NULL)
 	{
+
 		int BmpIndex = BmpInode->DataBlockIndex0[0];
 		File* BmpFile = OpenFile(disk, BmpInode);
 
