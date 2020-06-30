@@ -18,6 +18,19 @@ void vim(inode* nowPath, char* fileName) {
 	inode* fileInode = getInodeByPathName(fileName, nowPath);
 	inode* fatherFolderInode = getInodeByPathName(fileName, nowPath, 2);
 	File* openFile;
+
+	//cout << openFile->data << endl;
+	int maxlen = 0; // 达到过的最大长度
+
+	char buf[99999];	//最大100K
+
+	//初始化vi
+	int cnt = 0;
+
+	int winx, winy, curx, cury;
+
+	system("cls");	//清屏
+
 	// 判断文件是否存在
 	if (fatherFolderInode == NULL) {
 		cout << "vim: 无法打开\"" << fileName << "\": 没有那个文件或目录" << endl;
@@ -45,16 +58,8 @@ void vim(inode* nowPath, char* fileName) {
 	
 	openFile = OpenFile(disk, fileInode);
 
-	//cout << openFile->data << endl;
-	int maxlen = 0; // 达到过的最大长度
+
 	
-	char buf[99999];	//最大100K
-
-	//初始化vi
-	int cnt = 0;
-	system("cls");	//清屏
-
-	int winx, winy, curx, cury;
 
 
 
